@@ -23,7 +23,7 @@ class InviteAcceptanceController extends Controller
                 ->with('error', 'This invitation is no longer valid.');
         }
 
-        return Inertia::render('invites/accept', [
+        return Inertia::render('invite/accept', [
             'invite' => [
                 'code' => $invite->code,
                 'invited_name' => $invite->invited_name,
