@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CompanyService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class CompanyServiceController extends Controller
 {
@@ -21,7 +22,7 @@ class CompanyServiceController extends Controller
      */
     public function create()
     {
-        //
+          return Inertia::render('services/company/create');
     }
 
     /**

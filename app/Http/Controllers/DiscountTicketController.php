@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\DiscountTicket;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-
+use Inertia\Inertia;
+use Inertia\Response;
 class DiscountTicketController extends Controller
 {
     /**
@@ -22,40 +24,43 @@ class DiscountTicketController extends Controller
      */
     public function create()
     {
-        //
+     return Inertia::render('tickets/discounted/create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+  public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => 'required|string|unique:discount_tickets,code',
-            'name' => 'required|string',
-            'description' => 'nullable|string',
-            'discount_percentage' => 'nullable|numeric|between:0,100',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'valid_from' => 'required|date',
-            'valid_until' => 'required|date|after:valid_from',
-            'usage_limit' => 'nullable|integer|min:1',
-            'is_active' => 'boolean'
-        ], [
-            'discount_percentage' => 'Either discount_percentage or discount_amount must be provided',
-            'discount_amount' => 'Either discount_percentage or discount_amount must be provided'
+            'name' => ['required', 'string', 'max:50'],
+            'description' => ['nullable', 'string', 'max:200'],
+            'discount_percentage' => ['required', 'numeric', 'between:0,100'],
+            'valid_from' => ['required', 'date'],
+            'valid_until' => ['required', 'date', 'after:valid_from'],
         ]);
 
-        // Ensure either discount_percentage or discount_amount is provided
-        if (!$validated['discount_percentage'] && !$validated['discount_amount']) {
-            return response()->json([
-                'error' => 'Either discount_percentage or discount_amount must be provided'
-            ], 400);
-        }
+        $validated['code'] = $this->generateUniqueCode();
+        $validated['is_active'] = true;
 
-        $discountTicket = DiscountTicket::create($validated);
+        // Relationship sets user_id automatically and locks it to the authenticated user
+        $request->user()->discountTickets()->create($validated);
 
-        return response()->json($discountTicket, 201);
+        return redirect()->back()->with('success', 'Discounted ticket created successfully.');
     }
+
+    /**
+     * Generate a unique, uppercase alphanumeric code for a discount ticket.
+     */
+    protected function generateUniqueCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(10));
+        } while (DiscountTicket::where('code', $code)->exists());
+
+        return $code;
+    } 
+    
 
     /**
      * Display the specified resource.

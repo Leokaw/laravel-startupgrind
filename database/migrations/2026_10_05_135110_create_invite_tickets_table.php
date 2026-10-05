@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('invite_tickets', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('code')->unique();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+              $table->foreignUuid('user_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamp('used_at')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->integer('max_uses')->default(1);

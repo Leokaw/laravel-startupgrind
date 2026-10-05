@@ -47,7 +47,7 @@ class InviteTicketController extends Controller
 
     public function edit(InviteTicket $inviteTicket): Response
     {
-        return Inertia::render('tickets/invite/edit', [
+        return Inertia::render('tickets/invite/create', [
             'inviteTicket' => $inviteTicket,
         ]);
     }
