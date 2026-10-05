@@ -65,28 +65,41 @@ class CompanyServiceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, CompanyService $companyService)
-    {
-        $validated = $request->validate([
-            'name' => 'sometimes|string',
-            'description' => 'sometimes|string',
-            'price' => 'sometimes|numeric|min:0',
-            'category' => 'sometimes|string',
-            'is_active' => 'sometimes|boolean'
-        ]);
+    public function update(Request $request, CompanyService $companyService): RedirectResponse
+{
+    abort_unless(
+        $companyService->user_id === $request->user()->id,
+        403,
+    );
 
-        $companyService->update($validated);
+    $validated = $request->validate([
+        'name'        => ['required', 'string', 'max:50'],
+        'description' => ['nullable', 'string', 'max:200'],
+        'category'    => ['required', Rule::in(ServiceCategory::values())],
+        'is_active'   => ['required', 'boolean'],
+    ]);
 
-        return response()->json($companyService);
-    }
+    $companyService->update($validated);
+
+    return redirect()
+        ->back()
+        ->with('success', 'Company service updated successfully.');
+}
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(CompanyService $companyService)
-    {
-        $companyService->delete();
+    public function destroy(Request $request, CompanyService $companyService): RedirectResponse
+{
+    abort_unless(
+        $companyService->user_id === $request->user()->id,
+        403,
+    );
 
-        return response()->json(null, 204);
-    }
+    $companyService->delete();
+
+    return redirect()
+        ->back()
+        ->with('success', 'Company service deleted successfully.');
+}
 }

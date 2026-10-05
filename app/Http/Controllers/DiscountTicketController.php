@@ -13,11 +13,28 @@ class DiscountTicketController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $discountTickets = DiscountTicket::all();
-        return response()->json($discountTickets);
-    }
+  public function index(Request $request): Response
+{
+    $tickets = $request->user()
+        ->discountTickets()
+        ->when($request->input('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
+            });
+        })
+        ->when($request->input('status'), function ($query, $status) {
+            $query->where('is_active', $status === 'active');
+        })
+        ->latest()
+        ->paginate(10)
+        ->withQueryString();
+
+    return Inertia::render('tickets/discounted/index', [
+        'tickets' => $tickets,
+        'filters' => $request->only(['search', 'status']),
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.
@@ -81,45 +98,43 @@ class DiscountTicketController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, DiscountTicket $discountTicket)
-    {
-        $validated = $request->validate([
-            'code' => 'sometimes|string|unique:discount_tickets,code,' . $discountTicket->id,
-            'name' => 'sometimes|string',
-            'description' => 'sometimes|string',
-            'discount_percentage' => 'sometimes|nullable|numeric|between:0,100',
-            'discount_amount' => 'sometimes|nullable|numeric|min:0',
-            'valid_from' => 'sometimes|date',
-            'valid_until' => 'sometimes|date|after:valid_from',
-            'usage_limit' => 'sometimes|integer|min:1',
-            'times_used' => 'sometimes|integer|min:0',
-            'is_active' => 'sometimes|boolean'
-        ], [
-            'discount_percentage' => 'Either discount_percentage or discount_amount must be provided',
-            'discount_amount' => 'Either discount_percentage or discount_amount must be provided'
-        ]);
+   public function update(Request $request, DiscountTicket $discountTicket): RedirectResponse
+{
+    abort_unless(
+        $discountTicket->user_id === $request->user()->id,
+        403,
+    );
 
-        // Ensure either discount_percentage or discount_amount is provided if one is being updated
-        if (isset($validated['discount_percentage']) || isset($validated['discount_amount'])) {
-            if (!$validated['discount_percentage'] && !$validated['discount_amount']) {
-                // Keep existing values if neither is provided
-                unset($validated['discount_percentage']);
-                unset($validated['discount_amount']);
-            }
-        }
+    $validated = $request->validate([
+        'name'                => ['required', 'string', 'max:50'],
+        'description'         => ['nullable', 'string', 'max:200'],
+        'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        'valid_from'          => ['required', 'date'],
+        'valid_until'         => ['required', 'date', 'after_or_equal:valid_from'],
+        'is_active'           => ['required', 'boolean'],
+    ]);
 
-        $discountTicket->update($validated);
+    $discountTicket->update($validated);
 
-        return response()->json($discountTicket);
-    }
+    return redirect()
+        ->back()
+        ->with('success', 'Discounted ticket updated successfully.');
+}
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(DiscountTicket $discountTicket)
-    {
-        $discountTicket->delete();
+   public function destroy(Request $request, DiscountTicket $discountTicket): RedirectResponse
+{
+    abort_unless(
+        $discountTicket->user_id === $request->user()->id,
+        403,
+    );
 
-        return response()->json(null, 204);
-    }
+    $discountTicket->delete();
+
+    return redirect()
+        ->back()
+        ->with('success', 'Discounted ticket deleted successfully.');
+}
 }

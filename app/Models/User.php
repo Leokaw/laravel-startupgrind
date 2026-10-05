@@ -45,9 +45,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(InviteTicket::class, 'accepted_by');
     }
 
+ 
 
     public function companyServices(): HasMany
 {
     return $this->hasMany(CompanyService::class);
 }
+
 }

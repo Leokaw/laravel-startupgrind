@@ -5,6 +5,7 @@ use App\Http\Controllers\DiscountTicketController;
 use App\Http\Controllers\InviteAcceptanceController;
 use App\Http\Controllers\InviteTicketController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 
 Route::inertia('/', 'welcome')->name('home');
 // Public — invitees are not logged in yet
@@ -12,9 +13,10 @@ Route::get('/invite/{code}', [InviteAcceptanceController::class, 'show'])
     ->name('invites.accept.show');
 Route::post('/invite/{code}', [InviteAcceptanceController::class, 'store'])
     ->name('invites.accept.store');
-    
+
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
+
 
     // Discount tickets
     Route::get('/tickets/discounted/create', [DiscountTicketController::class, 'create'])
@@ -39,7 +41,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('tickets.invite.create');
     Route::post('/tickets/invite', [InviteTicketController::class, 'store'])
         ->name('tickets.invite.store');
+
+
+
+    Route::patch('/services/company/{companyService}', [CompanyServiceController::class, 'update'])
+        ->name('services.company.update');
+
+
+    Route::delete('/services/company/{companyService}', [CompanyServiceController::class, 'destroy'])
+        ->name('services.company.destroy');
 });
+
+
+Route::get('/tickets/discounted', [DiscountTicketController::class, 'index'])
+    ->name('tickets.discounted.index');
+Route::patch('/tickets/discounted/{discountTicket}', [DiscountTicketController::class, 'update'])
+    ->name('tickets.discounted.update');
+Route::delete('/tickets/discounted/{discountTicket}', [DiscountTicketController::class, 'destroy'])
+    ->name('tickets.discounted.destroy');
 
 
 
