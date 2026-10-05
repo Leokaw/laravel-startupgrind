@@ -1,99 +1,178 @@
 import { Head, Form } from '@inertiajs/react';
-import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Building2, Text, DollarSign } from 'lucide-react';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Building2, Tag } from 'lucide-react';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
-export default function CreateCompanyService() {
-  const [success, setSuccess] = useState(false);
+const inputLikeClasses =
+    'flex w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm dark:bg-input/30 placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40';
 
-  return (
-    <>
-      <Head title="Create Company Service" />
+type Props = {
+    serviceCategories: Record<string, string>;
+};
 
-      {success && (
-        <div className="mb-4 text-center text-sm font-medium text-green-600">
-          Company service created successfully!
-        </div>
-      )}
+export default function CreateCompanyService({ serviceCategories }: Props) {
+    const [success, setSuccess] = useState(false);
+    const [nameLength, setNameLength] = useState(0);
+    const [descLength, setDescLength] = useState(0);
 
-      <Form
-        method="post"
-        action="/services/company"
-        className="flex flex-col gap-6"
-      >
-        {({ processing, errors }) => (
-          <>
-            <div className="grid gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Service Name</Label>
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="name"
-                    type="text"
-                    name="name"
-                    required
-                    autoFocus
-                    tabIndex={1}
-                    autoComplete="off"
-                    placeholder="Enter service name"
-                  />
+    return (
+        <>
+            <Head title="Create Company Service" />
+
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+                <div className="mx-auto w-full max-w-2xl rounded-xl border border-sidebar-border/70 bg-background p-6 dark:border-sidebar-border">
+                    {success && (
+                        <div className="mb-4 rounded-lg bg-green-50 p-3 text-center text-sm font-medium text-green-700 dark:bg-green-950 dark:text-green-400">
+                            Company service created successfully!
+                        </div>
+                    )}
+
+                    <Form
+                        method="post"
+                        action="/services/company"
+                        onSuccess={() => {
+                            setSuccess(true);
+                            setNameLength(0);
+                            setDescLength(0);
+                        }}
+                        resetOnSuccess
+                        className="flex flex-col gap-6"
+                    >
+                        {({ processing, errors }) => (
+                            <>
+                                <div className="grid gap-6">
+                                    {/* Service Name */}
+                                    <Field data-invalid={!!errors.name}>
+                                        <div className="flex items-center justify-between">
+                                            <FieldLabel htmlFor="name">
+                                                Service Name{' '}
+                                                <span className="text-destructive">*</span>
+                                            </FieldLabel>
+                                            <span className="text-xs text-muted-foreground">
+                                                {nameLength}/50
+                                            </span>
+                                        </div>
+                                        <div className="relative">
+                                            <Input
+                                                id="name"
+                                                type="text"
+                                                name="name"
+                                                required
+                                                autoFocus
+                                                tabIndex={1}
+                                                autoComplete="off"
+                                                maxLength={50}
+                                                placeholder="Enter service name"
+                                                className="pr-9"
+                                                aria-invalid={!!errors.name}
+                                                onChange={(e) =>
+                                                    setNameLength(e.target.value.length)
+                                                }
+                                            />
+                                            <Building2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        </div>
+                                        {errors.name && (
+                                            <FieldError>{errors.name}</FieldError>
+                                        )}
+                                    </Field>
+
+                                    {/* Description */}
+                                    <Field data-invalid={!!errors.description}>
+                                        <div className="flex items-center justify-between">
+                                            <FieldLabel htmlFor="description">
+                                                Description (Optional)
+                                            </FieldLabel>
+                                            <span className="text-xs text-muted-foreground">
+                                                {descLength}/200
+                                            </span>
+                                        </div>
+                                        <textarea
+                                            id="description"
+                                            name="description"
+                                            tabIndex={2}
+                                            maxLength={200}
+                                            rows={4}
+                                            placeholder="Describe the service (optional)"
+                                            aria-invalid={!!errors.description}
+                                            className={cn(
+                                                inputLikeClasses,
+                                                'min-h-[80px] resize-y py-2',
+                                            )}
+                                            onChange={(e) =>
+                                                setDescLength(e.target.value.length)
+                                            }
+                                        />
+                                        {errors.description && (
+                                            <FieldError>{errors.description}</FieldError>
+                                        )}
+                                    </Field>
+
+                                    {/* Category */}
+                                    <Field data-invalid={!!errors.category}>
+                                        <FieldLabel htmlFor="category">
+                                            Category{' '}
+                                            <span className="text-destructive">*</span>
+                                        </FieldLabel>
+                                        <Select name="category">
+                                            <SelectTrigger
+                                                id="category"
+                                                tabIndex={3}
+                                                aria-invalid={!!errors.category}
+                                                className="relative w-full"
+                                            >
+                                                <SelectValue placeholder="Select a category" />
+                                                <Tag className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {Object.entries(serviceCategories).map(
+                                                    ([key, label]) => (
+                                                        <SelectItem key={key} value={key}>
+                                                            {label}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.category && (
+                                            <FieldError>{errors.category}</FieldError>
+                                        )}
+                                    </Field>
+
+                                    <Button
+                                        type="submit"
+                                        className="mt-4 w-full"
+                                        tabIndex={4}
+                                        disabled={processing}
+                                    >
+                                        {processing && <Spinner className="h-4 w-4" />}
+                                        Create Company Service
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+                    </Form>
                 </div>
-                <InputError message={errors.name} />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <div className="flex items-center gap-2">
-                  <Text className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="description"
-                    type="text"
-                    name="description"
-                    required
-                    tabIndex={2}
-                    autoComplete="off"
-                    placeholder="Enter description"
-                  />
-                </div>
-                <InputError message={errors.description} />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="price">Price</Label>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="price"
-                    type="number"
-                    name="price"
-                    required
-                    tabIndex={3}
-                    min="0"
-                    step="0.01"
-                    placeholder="Enter price"
-                  />
-                </div>
-                <InputError message={errors.price} />
-              </div>
-
-              <Button
-                type="submit"
-                className="mt-4 w-full"
-                tabIndex={4}
-                disabled={processing}
-              >
-                {processing && <Spinner className="h-4 w-4" />}
-                Create Company Service
-              </Button>
-            </>
-          }
-        )}
-      </Form>
-    </>
-  );
+            </div>
+        </>
+    );
 }
+
+CreateCompanyService.layout = {
+    breadcrumbs: [
+        {
+            title: 'Create Company Service',
+            href: '/services/company/create',
+        },
+    ],
+};

@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('company_services', function (Blueprint $table) {
             $table->uuid('id')->primary();
-               $table->foreignUuid('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignUuid('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('price', 10, 2);
+            $table->decimal('price', 10, 2)->default(50);
             $table->string('category')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

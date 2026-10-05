@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\InviteTicket;
+use App\Notifications\InviteTicketNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,7 +16,8 @@ class InviteTicketController extends Controller
     public function index(): Response
     {
         return Inertia::render('tickets/invite/index', [
-            'inviteTickets' => InviteTicket::latest()->get(),
+            'inviteTickets' => InviteTicket::with(['user', 'acceptedBy'])
+                ->latest()->get(),
         ]);
     }
 
@@ -25,53 +29,38 @@ class InviteTicketController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:50', 'unique:invite_tickets,code'],
+            'invited_name' => ['required', 'string', 'max:50'],
+            'invited_email' => ['required', 'email', 'max:255', 'unique:invite_tickets,invited_email'],
             'expires_at' => ['nullable', 'date', 'after:today'],
             'max_uses' => ['nullable', 'integer', 'min:1'],
-            'is_active' => ['boolean'],
         ]);
 
-        // Never trust user_id from the client — set it from the authenticated user.
-        $request->user()->inviteTickets()->create($validated);
+        $tempPassword = Str::password(12, symbols: false);
 
-        return redirect()->route('tickets.invite.create')
-            ->with('success', 'Invite ticket created successfully.');
-    }
-
-    public function show(InviteTicket $inviteTicket): Response
-    {
-        return Inertia::render('tickets/invite/show', [
-            'inviteTicket' => $inviteTicket,
-        ]);
-    }
-
-    public function edit(InviteTicket $inviteTicket): Response
-    {
-        return Inertia::render('tickets/invite/create', [
-            'inviteTicket' => $inviteTicket,
-        ]);
-    }
-
-    public function update(Request $request, InviteTicket $inviteTicket): RedirectResponse
-    {
-        $validated = $request->validate([
-            'code' => ['sometimes', 'string', 'max:50', 'unique:invite_tickets,code,' . $inviteTicket->id],
-            'used_at' => ['sometimes', 'nullable', 'date'],
-            'expires_at' => ['sometimes', 'nullable', 'date'],
-            'max_uses' => ['sometimes', 'integer', 'min:1'],
-            'current_uses' => ['sometimes', 'integer', 'min:0'],
-            'is_active' => ['sometimes', 'boolean'],
+        $invite = $request->user()->inviteTickets()->create([
+            'code' => $this->generateUniqueCode(),
+            'invited_name' => $validated['invited_name'],
+            'invited_email' => $validated['invited_email'],
+            'temporary_password' => $tempPassword,
+            'expires_at' => $validated['expires_at'] ?? null,
+            'max_uses' => $validated['max_uses'] ?? 1,
+            'status' => 'pending',
+            'is_active' => true,
         ]);
 
-        $inviteTicket->update($validated);
+        Notification::route('mail', $invite->invited_email)
+            ->notify(new InviteTicketNotification($invite));
 
-        return redirect()->back()->with('success', 'Invite ticket updated.');
+        return redirect()->back()
+            ->with('success', 'Invitation sent to '.$invite->invited_email);
     }
 
-    public function destroy(InviteTicket $inviteTicket): RedirectResponse
+    protected function generateUniqueCode(): string
     {
-        $inviteTicket->delete();
+        do {
+            $code = 'INV-'.strtoupper(Str::random(8));
+        } while (InviteTicket::where('code', $code)->exists());
 
-        return redirect()->back()->with('success', 'Invite ticket deleted.');
+        return $code;
     }
 }

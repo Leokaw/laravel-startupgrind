@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompanyService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Support\ServiceCategory;
+use Illuminate\Validation\Rule;
 
 class CompanyServiceController extends Controller
 {
@@ -22,26 +25,26 @@ class CompanyServiceController extends Controller
      */
     public function create()
     {
-          return Inertia::render('services/company/create');
+        return Inertia::render('services/company/create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'category' => 'nullable|string',
-            'is_active' => 'boolean'
+            'name' => ['required', 'string', 'max:50'],
+            'description' => ['nullable', 'string', 'max:200'],
+            'category' => ['required', Rule::in(ServiceCategory::values())],
         ]);
 
-        $companyService = CompanyService::create($validated);
+        // Price is set server-side; the client cannot override it.
+        $validated['price'] = 50;
+        $validated['is_active'] = true;
 
-        return response()->json($companyService, 201);
+        $request->user()->companyServices()->create($validated);
+
+        return redirect()->back()->with('success', 'Company service created successfully.');
     }
+
 
     /**
      * Display the specified resource.

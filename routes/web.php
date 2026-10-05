@@ -2,11 +2,17 @@
 
 use App\Http\Controllers\CompanyServiceController;
 use App\Http\Controllers\DiscountTicketController;
+use App\Http\Controllers\InviteAcceptanceController;
 use App\Http\Controllers\InviteTicketController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
-
+// Public — invitees are not logged in yet
+Route::get('/invite/{code}', [InviteAcceptanceController::class, 'show'])
+    ->name('invites.accept.show');
+Route::post('/invite/{code}', [InviteAcceptanceController::class, 'store'])
+    ->name('invites.accept.store');
+    
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
@@ -27,6 +33,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('services.company.create');
     Route::post('/services/company', [CompanyServiceController::class, 'store'])
         ->name('services.company.store');
+
+
+    Route::get('/tickets/invite/create', [InviteTicketController::class, 'create'])
+        ->name('tickets.invite.create');
+    Route::post('/tickets/invite', [InviteTicketController::class, 'store'])
+        ->name('tickets.invite.store');
 });
 
-require __DIR__.'/settings.php';
+
+
+require __DIR__ . '/settings.php';
