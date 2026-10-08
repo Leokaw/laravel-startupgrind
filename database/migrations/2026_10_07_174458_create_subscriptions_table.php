@@ -10,13 +10,23 @@ return new class extends Migration
     {
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->foreignUuid('user_id');            
+            $table->foreignUuid('user_id');
             $table->string('type');
             $table->string('stripe_id')->unique();
             $table->string('stripe_status');
             $table->string('stripe_price')->nullable();
             $table->integer('quantity')->nullable();
+
+            // Trial bookkeeping — both sides of the window so the UI can
+            // render "started X, ends Y" without inferring from created_at.
+            $table->timestamp('trial_started_at')->nullable();
             $table->timestamp('trial_ends_at')->nullable();
+
+            // If set, the plan changes to this Stripe price at the start of
+            // the next billing cycle. Null means "no pending change".
+            // Populated when a subscribed user clicks "Switch to this plan".
+            $table->string('pending_stripe_price')->nullable();
+
             $table->timestamp('ends_at')->nullable();
             $table->timestamps();
 

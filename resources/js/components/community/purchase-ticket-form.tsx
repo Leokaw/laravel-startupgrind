@@ -32,6 +32,7 @@ import {
     PaginationPrevious,
 } from '@/components/ui/pagination';
 import { cn } from '@/lib/utils';
+import { BorderBeamButton } from '../ui/border-beam-button';
 
 type DiscountTicket = {
     id: string;
@@ -243,7 +244,7 @@ export function PurchaseTicketForm({
                                         aria-disabled={safePage === 1}
                                         className={cn(
                                             safePage === 1 &&
-                                                'pointer-events-none opacity-50',
+                                            'pointer-events-none opacity-50',
                                         )}
                                         onClick={(e) => {
                                             e.preventDefault();
@@ -279,7 +280,7 @@ export function PurchaseTicketForm({
                                         aria-disabled={safePage === totalPages}
                                         className={cn(
                                             safePage === totalPages &&
-                                                'pointer-events-none opacity-50',
+                                            'pointer-events-none opacity-50',
                                         )}
                                         onClick={(e) => {
                                             e.preventDefault();
@@ -330,25 +331,30 @@ export function PurchaseTicketForm({
                 <div className="mt-6 flex justify-end gap-2">
                     <Button
                         type="button"
-                        variant="outline"
+                        variant="secondary"
+
                         onClick={() => onSuccess?.()}
                         disabled={form.processing}
                     >
                         Cancel
                     </Button>
-                    <Button type="submit" disabled={form.processing}>
+                    <BorderBeamButton
+                        variant="secondary"
+                        colorVariant="colorful"
+                        beamSize="md"
+                        type="submit" disabled={form.processing}>
                         {form.processing ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className=" h-4 w-4 animate-spin" />
                                 Purchasing
                             </>
                         ) : (
                             <>
-                                <Ticket className="mr-2 h-4 w-4" />
+                                <Ticket className=" h-4 w-4" />
                                 Purchase
                             </>
                         )}
-                    </Button>
+                    </BorderBeamButton>
                 </div>
             </form>
 
@@ -483,12 +489,12 @@ export function PurchaseTicketForm({
                         >
                             {form.processing ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <Loader2 className=" h-4 w-4 animate-spin" />
                                     Purchasing…
                                 </>
                             ) : (
                                 <>
-                                    <Ticket className="mr-2 h-4 w-4" />
+                                    <Ticket className=" h-4 w-4" />
                                     Confirm purchase
                                 </>
                             )}

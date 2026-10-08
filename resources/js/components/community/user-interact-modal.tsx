@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
     MessageSquare,
     Briefcase,
@@ -12,7 +13,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { HaloToggleGroup } from '@/components/ui/halo-toggle-group';
 import { cn } from '@/lib/utils';
 import { SendMessageForm } from './send-message-form';
 import { PurchaseServiceForm } from './purchase-service-form';
@@ -56,6 +57,8 @@ type Props = {
     ticketCost?: number;
 };
 
+type TabValue = 'message' | 'services' | 'tickets';
+
 const userTypeStyles: Record<
     User['user_type'],
     { label: string; className: string }
@@ -76,8 +79,39 @@ export function UserInteractModal({
     ticketCost = 50,
 }: Props) {
     const badge = userTypeStyles[user.user_type];
+    const [activeTab, setActiveTab] = useState<TabValue>('message');
 
     const handleClose = () => onOpenChange(false);
+
+    const tabs = [
+        {
+            value: 'message',
+            label: (
+                <span className="inline-flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="hidden sm:inline">Message</span>
+                </span>
+            ),
+        },
+        {
+            value: 'services',
+            label: (
+                <span className="inline-flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    <span className="hidden sm:inline">Services</span>
+                </span>
+            ),
+        },
+        {
+            value: 'tickets',
+            label: (
+                <span className="inline-flex items-center gap-2">
+                    <Ticket className="h-4 w-4" />
+                    <span className="hidden sm:inline">Tickets</span>
+                </span>
+            ),
+        },
+    ];
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -119,49 +153,38 @@ export function UserInteractModal({
                         </div>
                     </div>
 
-                    {/* Right column — tabs */}
-                    <Tabs defaultValue="message" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="message" className="gap-2">
-                                <MessageSquare className="h-4 w-4" />
-                                <span className="hidden sm:inline">Message</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="services" className="gap-2">
-                                <Briefcase className="h-4 w-4" />
-                                <span className="hidden sm:inline">Services</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="tickets" className="gap-2">
-                                <Ticket className="h-4 w-4" />
-                                <span className="hidden sm:inline">Tickets</span>
-                            </TabsTrigger>
-                        </TabsList>
+                    {/* Right column — halo tabs + content */}
+                    <div className="w-full space-y-4">
+                        <HaloToggleGroup
+                            items={tabs}
+                            value={activeTab}
+                            onValueChange={(v) => setActiveTab(v as TabValue)}
+                            className="!w-full"
+                        />
 
-                        {/* ========== Message tab ========== */}
-                        <TabsContent value="message" className="mt-4">
+                        {activeTab === 'message' && (
                             <SendMessageForm
                                 user={user}
                                 messageCost={messageCost}
                                 onSuccess={handleClose}
                             />
-                        </TabsContent>
+                        )}
 
-                        {/* ========== Services tab ========== */}
-                        <TabsContent value="services" className="mt-4">
+                        {activeTab === 'services' && (
                             <PurchaseServiceForm
                                 services={services}
                                 onSuccess={handleClose}
                             />
-                        </TabsContent>
+                        )}
 
-                        {/* ========== Tickets tab ========== */}
-                        <TabsContent value="tickets" className="mt-4">
+                        {activeTab === 'tickets' && (
                             <PurchaseTicketForm
                                 tickets={tickets}
                                 ticketCost={ticketCost}
                                 onSuccess={handleClose}
                             />
-                        </TabsContent>
-                    </Tabs>
+                        )}
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

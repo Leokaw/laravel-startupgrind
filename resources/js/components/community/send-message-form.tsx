@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { BorderBeamButton } from '../ui/border-beam-button';
 
 type Props = {
     /**
@@ -142,7 +143,11 @@ export function SendMessageForm({
                 >
                     Cancel
                 </Button>
-                <Button type="submit" disabled={form.processing}>
+                <BorderBeamButton
+                                        variant="secondary"
+                                        colorVariant="colorful"
+                                        beamSize="md"
+                type="submit" disabled={form.processing}>
                     {form.processing ? (
                         <>
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -154,7 +159,7 @@ export function SendMessageForm({
                             Send
                         </>
                     )}
-                </Button>
+                </BorderBeamButton>
             </div>
         </form>
     );

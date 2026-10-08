@@ -7,6 +7,7 @@ import {
     Users,
     Bell,
     CreditCard,
+    CalendarDays,
 } from 'lucide-react';
 import {
     SidebarGroup,
@@ -133,20 +134,22 @@ export function NavMain() {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
 
+               
                 <SidebarMenuItem>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isCurrentUrl('/billing')}
-                        tooltip={{ children: 'Billing' }}
-                        className={cn(activeClasses, itemMotion)}
-                    >
-                        <Link href="/billing" prefetch>
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            <span>Billing</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
+                <SidebarMenuButton
+                    asChild
+                    isActive={isCurrentUrl('/events')}
+                    tooltip={{ children: 'Events' }}
+                    className={cn(activeClasses, itemMotion)}
+                >
+                    <Link href="/events" prefetch>
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        <span>Events</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
             </SidebarMenu>
+            
         </SidebarGroup>
     );
 }

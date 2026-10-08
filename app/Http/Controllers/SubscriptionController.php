@@ -35,14 +35,41 @@ class SubscriptionController extends Controller
 
         $user = $request->user();
 
-        // Existing subscription → swap price in place, no new checkout.
+        // -----------------------------------------------------------------
+        // Already subscribed → handle as a deferred plan switch
+        // -----------------------------------------------------------------
         if ($user->subscribed('default')) {
-            $user->subscription('default')->swap($priceId);
+            $subscription = $user->subscription('default');
 
-            return back()->with('success', "Switched to the {$plan['name']} plan.");
+            // Clicking your current plan with a pending switch clears it —
+            // that's the "never mind, keep me where I am" path.
+            if ($subscription->stripe_price === $priceId) {
+                if ($subscription->pending_stripe_price) {
+                    $subscription->update(['pending_stripe_price' => null]);
+
+                    return back()->with(
+                        'success',
+                        "Scheduled switch cancelled — you're staying on {$plan['name']}."
+                    );
+                }
+
+                return back()->with('success', "You're already on the {$plan['name']} plan.");
+            }
+
+            // Schedule the change for the end of the current period.
+            $subscription->update(['pending_stripe_price' => $priceId]);
+
+            $effective = $subscription->current_period_end?->format('F j, Y') ?? 'the next billing cycle';
+
+            return back()->with(
+                'success',
+                "Your plan will switch to {$plan['name']} on {$effective}."
+            );
         }
 
-        // Mint a one-shot token the webhook and success page will share.
+        // -----------------------------------------------------------------
+        // First-time subscriber → Stripe Checkout
+        // -----------------------------------------------------------------
         $successToken = SubscriptionSuccessToken::create([
             'user_id'    => $user->id,
             'token'      => Str::random(48),
@@ -51,7 +78,6 @@ class SubscriptionController extends Controller
             'expires_at' => now()->addDay(),
         ]);
 
-        // First-time → Stripe Checkout.
         $checkout = $user
             ->newSubscription('default', $priceId)
             ->checkout([
@@ -82,6 +108,9 @@ class SubscriptionController extends Controller
             return back()->with('error', 'You do not have an active subscription.');
         }
 
+        // Cancelling overrides any scheduled plan switch — clearing it here
+        // avoids leaving a dangling intent once the sub enters grace period.
+        $subscription->update(['pending_stripe_price' => null]);
         $subscription->cancel();
 
         return back()->with('success', 'Your subscription will end at the close of the current period.');

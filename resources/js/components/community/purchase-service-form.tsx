@@ -32,6 +32,7 @@ import {
     PaginationPrevious,
 } from '@/components/ui/pagination';
 import { cn } from '@/lib/utils';
+import { BorderBeamButton } from '../ui/border-beam-button';
 
 type Service = {
     id: string;
@@ -227,7 +228,7 @@ export function PurchaseServiceForm({
                                         aria-disabled={safePage === 1}
                                         className={cn(
                                             safePage === 1 &&
-                                                'pointer-events-none opacity-50',
+                                            'pointer-events-none opacity-50',
                                         )}
                                         onClick={(e) => {
                                             e.preventDefault();
@@ -263,7 +264,7 @@ export function PurchaseServiceForm({
                                         aria-disabled={safePage === totalPages}
                                         className={cn(
                                             safePage === totalPages &&
-                                                'pointer-events-none opacity-50',
+                                            'pointer-events-none opacity-50',
                                         )}
                                         onClick={(e) => {
                                             e.preventDefault();
@@ -274,7 +275,7 @@ export function PurchaseServiceForm({
                             </PaginationContent>
                         </Pagination>
 
-                      
+
                     </div>
                 )}
 
@@ -313,7 +314,10 @@ export function PurchaseServiceForm({
                     >
                         Cancel
                     </Button>
-                    <Button type="submit" disabled={form.processing}>
+                    <BorderBeamButton
+                        variant="secondary"
+                        colorVariant="colorful"
+                        beamSize="md" type="submit" disabled={form.processing}>
                         {form.processing ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -325,7 +329,7 @@ export function PurchaseServiceForm({
                                 Purchase
                             </>
                         )}
-                    </Button>
+                    </BorderBeamButton>
                 </div>
             </form>
 
@@ -453,12 +457,12 @@ export function PurchaseServiceForm({
                         >
                             {form.processing ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <Loader2 className=" h-4 w-4 animate-spin" />
                                     Purchasing…
                                 </>
                             ) : (
                                 <>
-                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                    <ShoppingCart className=" h-4 w-4" />
                                     Confirm purchase
                                 </>
                             )}

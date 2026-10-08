@@ -18,7 +18,7 @@ export default function AcceptInvite({ invite }: Props) {
         <>
             <Head title="Accept Invitation" />
 
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+            <div className="flex items-center justify-center h-full min-h-screen flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="mx-auto w-full max-w-md rounded-xl border border-sidebar-border/70 bg-background p-6 dark:border-sidebar-border">
                     <div className="mb-6 space-y-1 text-center">
                         <h1 className="text-xl font-semibold">

@@ -1,15 +1,26 @@
 import { Head, router } from '@inertiajs/react';
 import {
+    AlertTriangle,
     Building2,
+    CheckCircle2,
     CircleCheck,
     Star,
+    XCircle,
     Zap,
     type LucideIcon,
 } from 'lucide-react';
+import {
+    Alert,
+    AlertDescription,
+    AlertTitle,
+} from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
-import { SubscriptionOverview } from './subscription-overview';
+import {
+    SubscriptionOverview,
+    type Subscription,
+} from './subscription-overview';
 
 type Plan = {
     slug: 'starter' | 'pro' | 'enterprise';
@@ -21,18 +32,6 @@ type Plan = {
     badge: string | null;
     features: string[];
 };
-
-type Subscription = {
-    status: string;
-    stripe_price: string | null;
-    current_period_start: string | null;
-    current_period_end: string | null;
-    ends_at: string | null;
-    trial_ends_at: string | null;
-    on_grace_period: boolean;
-    on_trial: boolean;
-    canceled: boolean;
-} | null;
 
 type Props = {
     plans: Plan[];
@@ -83,17 +82,8 @@ export default function Billing({
             <Head title="Billing" />
 
             <div className="mx-auto w-full p-4 md:p-6">
-                {flash.success && (
-                    <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
-                        {flash.success}
-                    </div>
-                )}
-
-                {flash.checkout === 'cancelled' && (
-                    <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
-                        Checkout was cancelled — you have not been charged.
-                    </div>
-                )}
+                {/* Success flash — emerald */}
+               
 
                 {/* Current subscription summary — only when there is one */}
                 {subscription && currentPlanData && (
@@ -103,6 +93,35 @@ export default function Billing({
                         onCancel={cancel}
                         onResume={resume}
                     />
+                )}
+
+                 {flash.success && (
+                    <Alert className="mb-4 border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-50">
+                        <CheckCircle2 />
+                        <AlertTitle>Success</AlertTitle>
+                        <AlertDescription>{flash.success}</AlertDescription>
+                    </Alert>
+                )}
+
+                {/* Error flash — red */}
+                {flash.error && (
+                    <Alert className="mb-4 border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-50">
+                        <XCircle />
+                        <AlertTitle>Something went wrong</AlertTitle>
+                        <AlertDescription>{flash.error}</AlertDescription>
+                    </Alert>
+                )}
+
+                {/* Checkout cancelled — amber */}
+                {flash.checkout === 'cancelled' && (
+                    <Alert className="mb-4 border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+                        <AlertTriangle />
+                        <AlertTitle>Checkout cancelled</AlertTitle>
+                        <AlertDescription>
+                            You have not been charged. You can try again whenever
+                            you're ready.
+                        </AlertDescription>
+                    </Alert>
                 )}
 
                 <div className="grid gap-6 md:grid-cols-3">
@@ -183,7 +202,7 @@ export default function Billing({
                                     </Button>
                                 ) : isCurrent ? (
                                     <Button
-                                        variant="outline"
+                                        variant="destructive"
                                         className="mt-8 h-12 w-full rounded-full text-base"
                                         onClick={cancel}
                                         disabled={subscription?.on_grace_period}

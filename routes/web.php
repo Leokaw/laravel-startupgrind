@@ -17,6 +17,8 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionSuccessController;
+use App\Http\Controllers\UpcomingEventsController;
+
 
 
 
@@ -133,6 +135,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/billing/success/{token}/complete', [SubscriptionSuccessController::class, 'complete'])
         ->name('billing.success.complete');
+
+
+    Route::get('/events', UpcomingEventsController::class)
+        ->name('events.index');
+
+    Route::get('/events/{slug}', [UpcomingEventsController::class, 'show'])
+        ->name('events.show');
 });
 
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\StripePlanResolver;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,55 +15,57 @@ class BillingController extends Controller
         $user         = $request->user();
         $subscription = $user->subscription('default');
 
-        // Only treat the subscription as current when it's actually valid.
-        // Cancelled-and-expired subs shouldn't power the "currentPlan" badge.
         $activeSubscription = $subscription && $subscription->valid()
             ? $subscription
             : null;
 
         $plans = collect(config('subscriptions.plans'))
-            ->map(function ($plan, $slug) use ($resolver) {
-                // Attach the resolved Stripe price ID so the frontend can
-                // distinguish plans if it ever needs to.
-                return array_merge($plan, [
-                    'slug'            => $slug,
-                    'stripe_price_id' => $resolver->priceIdFor($slug),
-                ]);
-            })
+            ->map(fn ($plan, $slug) => array_merge($plan, [
+                'slug'            => $slug,
+                'stripe_price_id' => $resolver->priceIdFor($slug),
+            ]))
             ->values()
             ->all();
+
+        // Resolve the pending-switch target to a displayable plan so the
+        // frontend can say "switches to Enterprise on Nov 8" instead of
+        // showing a raw Stripe price ID.
+        $pendingSlug = $activeSubscription?->pending_stripe_price
+            ? $resolver->planSlugFor($activeSubscription->pending_stripe_price)
+            : null;
+        $pendingPlan = $pendingSlug
+            ? ['slug' => $pendingSlug, 'name' => config("subscriptions.plans.{$pendingSlug}.name")]
+            : null;
+
+        // `trial_started_at` is stored as a string since Cashier's model
+        // doesn't cast it — we parse explicitly for the JSON payload.
+        $trialStartedAt = $activeSubscription?->trial_started_at
+            ? Carbon::parse($activeSubscription->trial_started_at)->toIso8601String()
+            : null;
 
         return Inertia::render('billing/index', [
             'plans' => $plans,
 
-            'currentPlan' => $resolver->planSlugFor(
-                $activeSubscription?->stripe_price
-            ),
+            'currentPlan' => $resolver->planSlugFor($activeSubscription?->stripe_price),
 
-            /*
-             |------------------------------------------------------------------
-             | Subscription details
-             |------------------------------------------------------------------
-             |
-             | `current_period_start` / `current_period_end` are provided by
-             | Cashier's Subscription model as accessors backed by the primary
-             | subscription_item row, so they exist even though there's no
-             | column of that name on the `subscriptions` table.
-             |
-             | `ends_at` is only populated after a cancellation — it's the
-             | date the paid access runs out.
-             |
-             | `trial_ends_at` stays null unless the plan is sold with a trial.
-             */
             'subscription' => $activeSubscription ? [
                 'status'               => $activeSubscription->stripe_status,
                 'stripe_price'         => $activeSubscription->stripe_price,
                 'current_period_start' => $activeSubscription->current_period_start?->toIso8601String(),
                 'current_period_end'   => $activeSubscription->current_period_end?->toIso8601String(),
                 'ends_at'              => $activeSubscription->ends_at?->toIso8601String(),
+
+                // Trial information — both `has_trial` and the two dates so
+                // the UI can decide whether to render the section at all.
+                'has_trial'            => $activeSubscription->trial_ends_at !== null,
+                'trial_started_at'     => $trialStartedAt,
                 'trial_ends_at'        => $activeSubscription->trial_ends_at?->toIso8601String(),
-                'on_grace_period'      => $activeSubscription->onGracePeriod(),
                 'on_trial'             => $activeSubscription->onTrial(),
+
+                // Pending plan switch (deferred to the next billing cycle).
+                'pending_plan'         => $pendingPlan,
+
+                'on_grace_period'      => $activeSubscription->onGracePeriod(),
                 'canceled'             => $activeSubscription->canceled(),
             ] : null,
 

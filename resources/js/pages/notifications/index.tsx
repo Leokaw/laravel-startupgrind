@@ -8,6 +8,7 @@ import {
     Wrench,
     Filter,
     ChevronDown,
+    Inbox,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -77,11 +78,8 @@ type Props = {
 type Meta = {
     icon: LucideIcon;
     label: string;
-    /** Classes for the round icon chip. */
     iconClass: string;
-    /** Classes applied to the Card when the notification is unread. */
     unreadClass: string;
-    /** Small dot next to the title when unread. */
     dotClass: string;
 };
 
@@ -172,21 +170,22 @@ export default function NotificationsIndex({
         );
     };
 
-   const goToPage = (url: string | null) => {
-    if (!url) return;
-    router.get(
-        url,
-        {},
-        {
-            preserveState: true,
-            preserveScroll: true,
-            only: ['notifications', 'unreadCount'],
-            onFinish: () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+    const goToPage = (url: string | null) => {
+        if (!url) return;
+        router.get(
+            url,
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['notifications', 'unreadCount'],
+                onFinish: () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
             },
-        },
-    );
-};
+        );
+    };
+
     const activeLabel =
         activeType === 'all' ? 'All types' : metaFor(activeType).label;
 
@@ -195,22 +194,49 @@ export default function NotificationsIndex({
             <Head title="Notifications" />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="rounded-xl border border-sidebar-border/70 bg-background p-6 dark:border-sidebar-border">
-                    {/* Header */}
-                    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                            <h1 className="text-lg font-semibold">Notifications</h1>
-                            <p className="text-sm text-muted-foreground">
-                                {unreadCount > 0
-                                    ? `You have ${unreadCount} unread notification${
-                                          unreadCount === 1 ? '' : 's'
-                                      }.`
-                                    : 'You’re all caught up.'}
-                            </p>
+                <div className="overflow-hidden rounded-xl border border-sidebar-border/70 bg-background dark:border-sidebar-border">
+                    {/* Hero band */}
+                    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-primary/20 bg-primary/5 px-6 py-6">
+                        <div className="flex items-start gap-4">
+                            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15">
+                                <Inbox className="size-6 text-primary" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                    <Bell className="size-3.5" />
+                                    Activity
+                                </div>
+                                <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+                                    Notifications
+                                </h1>
+                                <p className="mt-0.5 text-sm text-muted-foreground">
+                                    {unreadCount > 0
+                                        ? `You have ${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}.`
+                                        : "You're all caught up."}
+                                </p>
+                            </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            {/* Type filter dropdown */}
+                        {/* Quick stats pill — unread count when present */}
+                        {unreadCount > 0 && (
+                            <div className="flex items-center gap-2 self-center">
+                                <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm">
+                                    <Bell className="size-3.5 text-primary" />
+                                    <span className="font-medium tabular-nums">
+                                        {unreadCount}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                        unread
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Body */}
+                    <div className="p-6">
+                        {/* Toolbar */}
+                        <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" size="sm">
@@ -220,7 +246,9 @@ export default function NotificationsIndex({
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                    <DropdownMenuLabel>Filter by type</DropdownMenuLabel>
+                                    <DropdownMenuLabel>
+                                        Filter by type
+                                    </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuRadioGroup
                                         value={activeType}
@@ -230,7 +258,10 @@ export default function NotificationsIndex({
                                             All types
                                         </DropdownMenuRadioItem>
                                         {availableTypes.map((t) => (
-                                            <DropdownMenuRadioItem key={t} value={t}>
+                                            <DropdownMenuRadioItem
+                                                key={t}
+                                                value={t}
+                                            >
                                                 {metaFor(t).label}
                                             </DropdownMenuRadioItem>
                                         ))}
@@ -249,73 +280,89 @@ export default function NotificationsIndex({
                                 </Button>
                             )}
                         </div>
-                    </div>
 
-                    {/* List */}
-                    {notifications.data.length === 0 ? (
-                        <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-lg border border-dashed text-sm text-muted-foreground">
-                            <Bell className="h-6 w-6 opacity-50" />
-                            {activeType === 'all'
-                                ? 'No notifications yet.'
-                                : `No ${metaFor(activeType).label.toLowerCase()} notifications.`}
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {notifications.data.map((n) => (
-                                <NotificationRow
-                                    key={n.id}
-                                    notification={n}
-                                    onMarkRead={() => markAsRead(n.id)}
-                                />
-                            ))}
-                        </div>
-                    )}
+                        {/* List */}
+                        {notifications.data.length === 0 ? (
+                            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-lg border border-dashed text-sm text-muted-foreground">
+                                <Bell className="h-6 w-6 opacity-50" />
+                                {activeType === 'all'
+                                    ? 'No notifications yet.'
+                                    : `No ${metaFor(activeType).label.toLowerCase()} notifications.`}
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {notifications.data.map((n) => (
+                                    <NotificationRow
+                                        key={n.id}
+                                        notification={n}
+                                        onMarkRead={() => markAsRead(n.id)}
+                                    />
+                                ))}
+                            </div>
+                        )}
 
-                    {/* Pagination */}
-                    {notifications.last_page > 1 && (
-                        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-                            <p className="text-sm text-muted-foreground">
-                                Showing {notifications.from}–{notifications.to} of{' '}
-                                {notifications.total}
-                            </p>
+                        {/* Pagination */}
+                        {notifications.last_page > 1 && (
+                            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Showing {notifications.from}–
+                                    {notifications.to} of {notifications.total}
+                                </p>
 
-                            <nav
-                                className="flex flex-wrap items-center gap-1"
-                                aria-label="Pagination"
-                            >
-                                {notifications.links.map((link, i) => {
-                                    const isPrev = i === 0;
-                                    const isNext =
-                                        i === notifications.links.length - 1;
-                                    const isEllipsis = link.label === '...';
+                                <nav
+                                    className="flex flex-wrap items-center gap-1"
+                                    aria-label="Pagination"
+                                >
+                                    {notifications.links.map((link, i) => {
+                                        const isPrev = i === 0;
+                                        const isNext =
+                                            i ===
+                                            notifications.links.length - 1;
+                                        const isEllipsis =
+                                            link.label === '...';
 
-                                    if (isEllipsis) {
+                                        if (isEllipsis) {
+                                            return (
+                                                <span
+                                                    key={`gap-${i}`}
+                                                    className="px-2 text-sm text-muted-foreground"
+                                                >
+                                                    …
+                                                </span>
+                                            );
+                                        }
+
                                         return (
-                                            <span
-                                                key={`gap-${i}`}
-                                                className="px-2 text-sm text-muted-foreground"
+                                            <Button
+                                                key={link.label + i}
+                                                variant={
+                                                    link.active
+                                                        ? 'default'
+                                                        : 'outline'
+                                                }
+                                                size="sm"
+                                                disabled={!link.url}
+                                                onClick={() =>
+                                                    goToPage(link.url)
+                                                }
+                                                aria-current={
+                                                    link.active
+                                                        ? 'page'
+                                                        : undefined
+                                                }
                                             >
-                                                …
-                                            </span>
+                                                {isPrev
+                                                    ? 'Previous'
+                                                    : isNext
+                                                      ? 'Next'
+                                                      : link.label}
+                                            </Button>
                                         );
-                                    }
-
-                                    return (
-                                        <Button
-                                            key={link.label + i}
-                                            variant={link.active ? 'default' : 'outline'}
-                                            size="sm"
-                                            disabled={!link.url}
-                                            onClick={() => goToPage(link.url)}
-                                            aria-current={link.active ? 'page' : undefined}
-                                        >
-                                            {isPrev ? 'Previous' : isNext ? 'Next' : link.label}
-                                        </Button>
-                                    );
-                                })}
-                            </nav>
-                        </div>
-                    )}
+                                    })}
+                                </nav>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </>
@@ -337,11 +384,6 @@ function NotificationRow({
     const unread = notification.read_at === null;
     const meta = metaFor(notification.type);
     const Icon = meta.icon;
-
-    const isSpend =
-        d.direction === 'sent' ||
-        d.direction === 'purchased';
-    const isEarn = d.direction === 'sold';
 
     return (
         <Card
@@ -365,7 +407,12 @@ function NotificationRow({
                         {d.title ?? meta.label}
                     </p>
                     {unread && (
-                        <span className={cn('h-2 w-2 rounded-full', meta.dotClass)} />
+                        <span
+                            className={cn(
+                                'h-2 w-2 rounded-full',
+                                meta.dotClass,
+                            )}
+                        />
                     )}
                 </div>
 
@@ -373,7 +420,9 @@ function NotificationRow({
 
                 {d.topic && (
                     <p className="text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground">Topic:</span>{' '}
+                        <span className="font-medium text-foreground">
+                            Topic:
+                        </span>{' '}
                         {d.topic}
                     </p>
                 )}

@@ -1,21 +1,33 @@
 import { router, usePage } from '@inertiajs/react';
+import { motion } from 'motion/react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Camera, Trash2, Mail, ImageOff, User, Loader2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+    Camera,
+    Trash2,
+    Mail,
+    ImageOff,
+    User,
+    Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+    CutoutCard,
+    CutoutCardAction,
+    CutoutCardContent,
+    CutoutCardImage,
+    CutoutCardMedia,
+    CutoutCardOverlay,
+    CutoutCardPin,
+    cutoutCardSurfaceClassName,
+    CutoutCorner,
+    useCutoutContentStaggerVariants,
+} from '@/components/ui/cutout-card';
 import { cn } from '@/lib/utils';
 import { UserInteractModal } from './user-interact-modal';
 
@@ -29,7 +41,6 @@ type User = {
     company: { id: string; name: string } | null;
     email_verified_at: string | null;
     approved_at: string | null;
-    // new:
     services: {
         id: string;
         name: string;
@@ -46,19 +57,34 @@ type User = {
     }[];
 };
 
-
 type Props = {
     user: User;
 };
 
 const userTypeStyles: Record<
     User['user_type'],
-    { label: string; className: string }
+    { label: string; pinClass: string; cornerClass: string }
 > = {
-    company: { label: 'Company', className: 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/20' },
-    freelancer: { label: 'Freelancer', className: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20' },
-    user: { label: 'Community', className: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' },
-    employee: { label: 'Employee', className: 'bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/20' },
+    company: {
+        label: 'Company',
+        pinClass: 'bg-blue-500 text-white',
+        cornerClass: 'text-blue-500',
+    },
+    freelancer: {
+        label: 'Freelancer',
+        pinClass: 'bg-amber-500 text-white',
+        cornerClass: 'text-amber-500',
+    },
+    user: {
+        label: 'Community',
+        pinClass: 'bg-emerald-500 text-white',
+        cornerClass: 'text-emerald-500',
+    },
+    employee: {
+        label: 'Employee',
+        pinClass: 'bg-purple-500 text-white',
+        cornerClass: 'text-purple-500',
+    },
 };
 
 export function UserCard({ user }: Props) {
@@ -73,6 +99,8 @@ export function UserCard({ user }: Props) {
     const [hovering, setHovering] = useState(false);
     const [interactOpen, setInteractOpen] = useState(false);
     const [openingInteract, setOpeningInteract] = useState(false);
+
+    const stagger = useCutoutContentStaggerVariants();
 
     const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -113,9 +141,6 @@ export function UserCard({ user }: Props) {
     };
 
     const handleOpenInteract = () => {
-        // Brief visual beat so the click registers before the modal mounts.
-        // When services/tickets are fetched from the server on open later,
-        // keep the spinner until that request resolves.
         setOpeningInteract(true);
         setTimeout(() => {
             setInteractOpen(true);
@@ -129,33 +154,35 @@ export function UserCard({ user }: Props) {
 
     return (
         <>
-            <Card
+            <CutoutCard
                 className={cn(
-                    'relative overflow-hidden pt-0 transition-shadow hover:shadow-md',
-                    isCurrentUser && 'ring-2 ring-rose-300 dark:ring-rose-900',
+                    cutoutCardSurfaceClassName,
+                    isCurrentUser && 'ring-2 ring-primary/60 dark:ring-primary/50',
                 )}
             >
-                {/* Image + overlays */}
-                <div
-                    className="group relative aspect-square overflow-hidden"
+                {/* -----------------------------------------------------------
+                 |  Media — avatar, overlay, type pin, camera & trash controls
+                 | ----------------------------------------------------------- */}
+                <CutoutCardMedia
+                    className="aspect-square"
                     onMouseEnter={() => setHovering(true)}
                     onMouseLeave={() => setHovering(false)}
                 >
                     {preview || user.has_custom_profile_photo ? (
-                        <img
+                        <CutoutCardImage
                             src={preview ?? user.profile_photo_url}
                             alt={user.name}
-                            className={cn(
-                                'h-full w-full object-cover transition-transform duration-300',
-                                showTrash && 'scale-105',
-                            )}
+                            className={cn(showTrash && 'scale-105')}
                         />
                     ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-zinc-100 transition-colors dark:bg-zinc-800">
+                        <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 transition-colors dark:bg-zinc-800">
                             <ImageOff className="h-12 w-12 text-zinc-400 dark:text-zinc-600" />
                         </div>
                     )}
 
+                    <CutoutCardOverlay />
+
+                    {/* Trash overlay on hover (own card only) */}
                     {showTrash && (
                         <button
                             type="button"
@@ -169,25 +196,31 @@ export function UserCard({ user }: Props) {
                         </button>
                     )}
 
-                    <Badge
-                        variant="outline"
+                    {/* User type pin — top-right with cutout corners */}
+                    <CutoutCardPin
                         className={cn(
-                            'absolute left-3 top-3 z-20 border backdrop-blur-sm',
-                            badge.className,
+                            'top-0 right-0 rounded-bl-[16px] px-3 py-1.5 text-xs font-semibold shadow-md',
+                            badge.pinClass,
                         )}
                     >
                         {badge.label}
-                    </Badge>
+                        <CutoutCorner
+                            className={cn(
+                                'absolute top-0 -left-[23px] -rotate-90',
+                                badge.cornerClass,
+                            )}
+                            size={24}
+                        />
+                        <CutoutCorner
+                            className={cn(
+                                'absolute right-0 -bottom-[23px] -rotate-90',
+                                badge.cornerClass,
+                            )}
+                            size={24}
+                        />
+                    </CutoutCardPin>
 
-                    {isCurrentUser && (
-                        <Badge
-                            variant="secondary"
-                            className="absolute left-3 top-11 z-20 bg-rose-500/90 text-white shadow-sm hover:bg-rose-500/90"
-                        >
-                            You
-                        </Badge>
-                    )}
-
+                    {/* Camera button — top-left, own card only */}
                     {isCurrentUser && (
                         <>
                             <input
@@ -201,58 +234,101 @@ export function UserCard({ user }: Props) {
                                 <TooltipTrigger asChild>
                                     <button
                                         type="button"
-                                        onClick={() => fileInput.current?.click()}
+                                        onClick={() =>
+                                            fileInput.current?.click()
+                                        }
                                         disabled={processing}
                                         aria-label="Update profile picture"
-                                        className="absolute right-3 top-3 z-40 flex h-7 w-7 items-center dark:bg-gray-300 dark:text-gray-900 bg-gray-700 text-gray-200 dark:hover:bg-gray-200 justify-center rounded-full text-foreground shadow-md backdrop-blur-sm transition disabled:opacity-50"
+                                        className="absolute left-3 top-3 z-40 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white shadow-md backdrop-blur-sm transition hover:bg-black/70 disabled:opacity-50"
                                     >
-                                        <Camera className="h-3.5 w-3.5" />
+                                        {processing ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Camera className="h-4 w-4" />
+                                        )}
                                     </button>
                                 </TooltipTrigger>
-                                <TooltipContent side="left">
+                                <TooltipContent side="right">
                                     Update profile picture
                                 </TooltipContent>
                             </Tooltip>
                         </>
                     )}
-                </div>
+                </CutoutCardMedia>
 
-                {/* Info */}
-                <CardHeader>
-                    <CardTitle className="truncate">{user.name}</CardTitle>
-                    <CardDescription className="truncate">
-                        {user.email}
-                    </CardDescription>
-                </CardHeader>
+                {/* -----------------------------------------------------------
+                 |  Content — name, "You" badge, email (with bottom spacer
+                 |  so the hover-revealed action doesn't cover text)
+                 | ----------------------------------------------------------- */}
+                <CutoutCardContent className="pb-16">
+                    <motion.div
+                        className="contents"
+                        initial="hidden"
+                        animate="show"
+                        variants={stagger.container}
+                    >
+                        <motion.div
+                            variants={stagger.item}
+                            className="mb-1 flex items-center gap-2"
+                        >
+                            <h3 className="text-card-foreground min-w-0 flex-1 truncate text-base leading-snug font-semibold">
+                                {user.name}
+                            </h3>
+                            {isCurrentUser && (
+                                <span className="bg-primary text-white inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider shadow-sm">
+                                    You
+                                </span>
+                            )}
+                        </motion.div>
 
-                {/* Footer button — disabled on your own card */}
-                <CardFooter>
-                    {isCurrentUser ? (
-                        <Button className="w-full" variant="secondary" disabled>
+                        <motion.p
+                            variants={stagger.item}
+                            className="text-muted-foreground truncate text-sm"
+                        >
+                            {user.email}
+                        </motion.p>
+                    </motion.div>
+                </CutoutCardContent>
+
+                {/* -----------------------------------------------------------
+                 |  Action — same pill as events, revealed on hover
+                 |  For your own card, show the disabled "This is you" button
+                 |  inside the action region but always visible.
+                 | ----------------------------------------------------------- */}
+                {isCurrentUser ? (
+                    <div className="absolute bottom-5 left-5 right-5">
+                        <Button
+                            className="w-full"
+                            variant="secondary"
+                            disabled
+                        >
                             <User className="mr-2 h-4 w-4" />
                             This is you
                         </Button>
-                    ) : (
+                    </div>
+                ) : (
+                    <CutoutCardAction className="right-5 bottom-5">
                         <Button
-                            className="w-full"
+                            size="sm"
                             onClick={handleOpenInteract}
                             disabled={openingInteract}
+                            className="gap-1.5 rounded-full px-4 py-2 shadow-md"
                         >
                             {openingInteract ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <Loader2 className="size-3.5 animate-spin" />
                                     Loading
                                 </>
                             ) : (
                                 <>
-                                    <Mail className="mr-2 h-4 w-4" />
+                                    <Mail className="size-3.5" />
                                     Interact
                                 </>
                             )}
                         </Button>
-                    )}
-                </CardFooter>
-            </Card>
+                    </CutoutCardAction>
+                )}
+            </CutoutCard>
 
             {/* Modal — mounted only when open, so state resets on close */}
             {interactOpen && (
