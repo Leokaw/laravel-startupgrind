@@ -22,7 +22,7 @@ void createInertiaApp({
         switch (true) {
             case name === 'welcome':
                 return null;
-            case name.startsWith('invite/'):   // matches Inertia::render('invite/accept')
+            case name === 'invite/accept':   // public accept page only
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
@@ -45,7 +45,7 @@ void createInertiaApp({
     },
 
     progress: {
-        color: '#4B5563',
+        color: 'red',
     },
 });
 

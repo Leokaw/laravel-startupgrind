@@ -13,14 +13,19 @@ import { Mail, User, Calendar as CalendarIcon, Users } from 'lucide-react';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { isBlockedEmailDomain } from '@/lib/blocked-email-domains';
 
 const inputLikeClasses =
     'flex w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm dark:bg-input/30 placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40';
+
+const BLOCKED_MESSAGE =
+    'Please use a business email. Personal email providers (Gmail, Hotmail, Yahoo, etc.) are not accepted.';
 
 export default function CreateInviteTicket() {
     const [success, setSuccess] = useState(false);
     const [nameLength, setNameLength] = useState(0);
     const [expiresAt, setExpiresAt] = useState<Date | undefined>();
+    const [emailError, setEmailError] = useState<string | null>(null);
 
     return (
         <>
@@ -41,6 +46,7 @@ export default function CreateInviteTicket() {
                             setSuccess(true);
                             setNameLength(0);
                             setExpiresAt(undefined);
+                            setEmailError(null);
                         }}
                         resetOnSuccess
                         className="flex flex-col gap-6"
@@ -83,7 +89,7 @@ export default function CreateInviteTicket() {
                                     </Field>
 
                                     {/* Invited Email */}
-                                    <Field data-invalid={!!errors.invited_email}>
+                                    <Field data-invalid={!!(errors.invited_email || emailError)}>
                                         <FieldLabel htmlFor="invited_email">
                                             Invited Email{' '}
                                             <span className="text-destructive">*</span>
@@ -97,12 +103,24 @@ export default function CreateInviteTicket() {
                                                 tabIndex={2}
                                                 placeholder="name@company.com"
                                                 className="pr-9"
-                                                aria-invalid={!!errors.invited_email}
+                                                aria-invalid={
+                                                    !!(errors.invited_email || emailError)
+                                                }
+                                                onChange={(e) => {
+                                                    const value = e.target.value.trim();
+                                                    setEmailError(
+                                                        value && isBlockedEmailDomain(value)
+                                                            ? BLOCKED_MESSAGE
+                                                            : null,
+                                                    );
+                                                }}
                                             />
                                             <Mail className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         </div>
-                                        {errors.invited_email && (
-                                            <FieldError>{errors.invited_email}</FieldError>
+                                        {(errors.invited_email || emailError) && (
+                                            <FieldError>
+                                                {errors.invited_email ?? emailError}
+                                            </FieldError>
                                         )}
                                     </Field>
 
@@ -176,7 +194,7 @@ export default function CreateInviteTicket() {
                                         type="submit"
                                         className="mt-4 w-full"
                                         tabIndex={5}
-                                        disabled={processing}
+                                        disabled={processing || !!emailError}
                                     >
                                         {processing && <Spinner className="h-4 w-4" />}
                                         Send Invitation

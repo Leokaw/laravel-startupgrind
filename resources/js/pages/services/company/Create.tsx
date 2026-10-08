@@ -4,13 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Building2, Tag } from 'lucide-react';
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Building2, Tag, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +25,7 @@ export default function CreateCompanyService({ serviceCategories }: Props) {
     const [success, setSuccess] = useState(false);
     const [nameLength, setNameLength] = useState(0);
     const [descLength, setDescLength] = useState(0);
+    const [category, setCategory] = useState('');
 
     return (
         <>
@@ -45,6 +46,7 @@ export default function CreateCompanyService({ serviceCategories }: Props) {
                             setSuccess(true);
                             setNameLength(0);
                             setDescLength(0);
+                            setCategory('');
                         }}
                         resetOnSuccess
                         className="flex flex-col gap-6"
@@ -124,26 +126,71 @@ export default function CreateCompanyService({ serviceCategories }: Props) {
                                             Category{' '}
                                             <span className="text-destructive">*</span>
                                         </FieldLabel>
-                                        <Select name="category">
-                                            <SelectTrigger
-                                                id="category"
-                                                tabIndex={3}
-                                                aria-invalid={!!errors.category}
-                                                className="relative w-full"
+
+                                        {/* Hidden input carries the value with the form submission. */}
+                                        <input
+                                            type="hidden"
+                                            name="category"
+                                            value={category}
+                                        />
+
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button
+                                                    type="button"
+                                                    id="category"
+                                                    tabIndex={3}
+                                                    aria-invalid={!!errors.category}
+                                                    className={cn(
+                                                        'relative flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none',
+                                                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                                                        'disabled:cursor-not-allowed disabled:opacity-50',
+                                                        'aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40',
+                                                        'dark:bg-input/30',
+                                                    )}
+                                                >
+                                                    <span
+                                                        className={cn(
+                                                            'truncate text-left',
+                                                            !category &&
+                                                                'text-muted-foreground',
+                                                        )}
+                                                    >
+                                                        {category
+                                                            ? serviceCategories[category]
+                                                            : 'Select a category'}
+                                                    </span>
+
+                                                    {/* Kept at right-9 to match the original spacing
+                                                        (right of the value, left of the chevron). */}
+                                                    <Tag className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+                                                    <ChevronDown className="pointer-events-none h-4 w-4 shrink-0 opacity-50" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+
+                                            <DropdownMenuContent
+                                                align="start"
+                                                className="w-[var(--radix-dropdown-menu-trigger-width)]"
                                             >
-                                                <SelectValue placeholder="Select a category" />
-                                                <Tag className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Object.entries(serviceCategories).map(
-                                                    ([key, label]) => (
-                                                        <SelectItem key={key} value={key}>
-                                                            {label}
-                                                        </SelectItem>
-                                                    ),
-                                                )}
-                                            </SelectContent>
-                                        </Select>
+                                                <DropdownMenuRadioGroup
+                                                    value={category}
+                                                    onValueChange={setCategory}
+                                                >
+                                                    {Object.entries(serviceCategories).map(
+                                                        ([key, label]) => (
+                                                            <DropdownMenuRadioItem
+                                                                key={key}
+                                                                value={key}
+                                                            >
+                                                                {label}
+                                                            </DropdownMenuRadioItem>
+                                                        ),
+                                                    )}
+                                                </DropdownMenuRadioGroup>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+
                                         {errors.category && (
                                             <FieldError>{errors.category}</FieldError>
                                         )}

@@ -32,47 +32,44 @@ class InviteAcceptanceController extends Controller
         ]);
     }
 
-    public function store(Request $request, string $code): RedirectResponse
-    {
-        $invite = InviteTicket::where('code', $code)->first();
+ public function store(Request $request, string $code): RedirectResponse
+{
+    $invite = InviteTicket::where('code', $code)->first();
 
-        if (! $invite || ! $invite->isRedeemable()) {
-            return redirect()->route('login')
-                ->with('error', 'This invitation is no longer valid.');
-        }
-
-        $request->validate([
-            'password' => ['required', 'string'],
-        ]);
-
-        // The invitee must type the exact temporary password from the email.
-        if (! hash_equals($invite->temporary_password, $request->password)) {
-            throw ValidationException::withMessages([
-                'password' => 'The password does not match this invitation.',
-            ]);
-        }
-
-        // Create the user account with 'employee' user type.
-        $user = User::create([
-            'name' => $invite->invited_name,
-            'email' => $invite->invited_email,
-            'password' => Hash::make($request->password),
-            'user_type' => 'employee',
-            'email_verified_at' => now(),
-        ]);
-
-        // Mark the invite accepted and record the audit trail.
-        $invite->update([
-            'status' => 'accepted',
-            'accepted_by' => $user->id,
-            'used_at' => now(),
-            'current_uses' => $invite->current_uses + 1,
-            'temporary_password' => null, // clear for security after redemption
-        ]);
-
-        Auth::login($user);
-
-        return redirect()->route('dashboard')
-            ->with('success', 'Welcome to the team!');
+    if (! $invite || ! $invite->isRedeemable()) {
+        return redirect()->route('login')
+            ->with('error', 'This invitation is no longer valid.');
     }
+
+    $request->validate([
+        'password' => ['required', 'string'],
+    ]);
+
+    // temporary_password holds the bcrypt hash of the temp password.
+    if (! Hash::check($request->password, $invite->temporary_password)) {
+        throw ValidationException::withMessages([
+            'password' => 'The password does not match this invitation.',
+        ]);
+    }
+
+    // The user was already created when the invite was sent.
+    $user = User::where('email', $invite->invited_email)->firstOrFail();
+
+    // Mark accepted and audit it. DO NOT null out temporary_password —
+    // the column is NOT NULL in the schema, and we don't need to clear it.
+    $invite->update([
+        'status'       => 'accepted',
+        'accepted_by'  => $user->id,
+        'used_at'      => now(),
+        'current_uses' => $invite->current_uses + 1,
+    ]);
+
+    // Now that they proved they own the email, verify them.
+    $user->forceFill(['email_verified_at' => now()])->save();
+
+    Auth::login($user);
+
+    return redirect()->route('dashboard')
+        ->with('success', 'Welcome to the team!');
+}
 }
