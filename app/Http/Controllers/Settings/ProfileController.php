@@ -20,7 +20,7 @@ class ProfileController extends Controller
         return Inertia::render('settings/profile', [
             'mustVerifyEmail'   => $request->user() instanceof MustVerifyEmail,
             'status'            => $request->session()->get('status'),
-            // 👇 needed by the dropdown on the profile page.
+            // needed by the dropdown on the profile page.
             'serviceCategories' => ServiceCategory::all(),
         ]);
     }

@@ -17,24 +17,35 @@ class InviteTicketController extends Controller
 {
     public function index(Request $request): Response
     {
-        $this->authorizeInviter($request->user());
+        $company = $this->authorizedCompany($request->user());
+
+        // Show every invite sent by the company itself *or* by any of
+        // its employees. The inviter's user_id is the company id for
+        // company-sent invites, and the employee id otherwise — so we
+        // match against both.
+        $inviteTickets = InviteTicket::with(['user', 'acceptedBy'])
+            ->whereHas('user', function ($q) use ($company) {
+                $q->where('id', $company->id)
+                  ->orWhere('company_id', $company->id);
+            })
+            ->latest()
+            ->get();
 
         return Inertia::render('tickets/invite/index', [
-            'inviteTickets' => InviteTicket::with(['user', 'acceptedBy'])
-                ->latest()->get(),
+            'inviteTickets' => $inviteTickets,
         ]);
     }
 
     public function create(Request $request): Response
     {
-        $this->authorizeInviter($request->user());
+        $this->authorizedCompany($request->user());
 
         return Inertia::render('tickets/invite/create');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $this->authorizeInviter($request->user());
+        $company = $this->authorizedCompany($request->user());
 
         $validated = $request->validate([
             'invited_name'  => ['required', 'string', 'max:50'],
@@ -47,22 +58,23 @@ class InviteTicketController extends Controller
             'max_uses'      => ['nullable', 'integer', 'min:1'],
         ]);
 
-        // The guard above guarantees this is an approved company.
-        $company = $request->user();
-
         $tempPassword = Str::password(12, symbols: false);
         $hashed       = Hash::make($tempPassword);
 
+        // The invitee joins *the company*, regardless of whether the
+        // invite was sent by the company owner or one of their employees.
         User::create([
             'name'              => $validated['invited_name'],
             'email'             => $validated['invited_email'],
             'password'          => $hashed,
-            'user_type'         => 'employee',
+            'user_type'         => User::TYPE_EMPLOYEE,
             'company_id'        => $company->id,
             'email_verified_at' => null,
         ]);
 
-        $invite = $company->inviteTickets()->create([
+        // The invite record belongs to the actual sender for audit
+        // purposes — company owner or employee.
+        $invite = $request->user()->inviteTickets()->create([
             'code'               => $this->generateUniqueCode(),
             'invited_name'       => $validated['invited_name'],
             'invited_email'      => $validated['invited_email'],
@@ -90,16 +102,29 @@ class InviteTicketController extends Controller
     }
 
     /**
-     * Only approved company accounts may invite users.
+     * Ensure the user is allowed to send invites and return the company
+     * they act on behalf of.
+     *
+     *   - Companies (approved) → returns the company itself.
+     *   - Employees of an approved company → returns their company.
+     *   - Everyone else → 403.
      */
-    protected function authorizeInviter(?User $user): void
+    protected function authorizedCompany(?User $user): User
     {
-        if (! $user || ! $user->isCompany()) {
-            abort(403, 'Only company accounts can invite users.');
+        if (! $user) {
+            abort(403, 'You must be signed in to invite users.');
         }
 
-        if ($user->approved_at === null) {
+        $company = $user->invitableCompany();
+
+        if (! $company) {
+            abort(403, 'Only company accounts and their employees can invite users.');
+        }
+
+        if ($company->approved_at === null) {
             abort(403, 'Your company account is pending approval.');
         }
+
+        return $company;
     }
 }

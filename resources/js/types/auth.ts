@@ -1,19 +1,21 @@
 export type User = {
-    id: number;
+    id: string;
     name: string;
     email: string;
-    avatar?: string;
+    user_type: 'company' | 'user' | 'freelancer' | 'employee';
+    approved_at: string | null;
     email_verified_at: string | null;
-    created_at: string;
-    updated_at: string;
-
-    // 👇 new — declared explicitly so they don't fall through to `unknown`
+    has_custom_profile_photo: boolean;   
+    profile_photo_url: string;
     description: string | null;
     area_of_work: string | null;
-
-    [key: string]: unknown;
+    membership: {
+        tier: string;
+        status: string;
+        credits_balance: number;
+    } | null;
 };
 
 export type Auth = {
-    user: User;
+    user: User | null;
 };

@@ -58,6 +58,7 @@ class HandleInertiaRequests extends Middleware
                     'approved_at'         => $user->approved_at,
                     'email_verified_at'   => $user->email_verified_at,
                     'profile_photo_url'   => $user->profile_photo_url,
+                     'has_custom_profile_photo' => $user->hasCustomProfilePhoto(), 
 
                     // Membership is optional — a user may not have one yet.
                     'membership' => $user->membership ? [

@@ -17,6 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
+import { BorderBeamButton } from '@/components/ui/border-beam-button';
 import {
     SubscriptionOverview,
     type Subscription,
@@ -82,9 +83,6 @@ export default function Billing({
             <Head title="Billing" />
 
             <div className="mx-auto w-full p-4 md:p-6">
-                {/* Success flash — emerald */}
-               
-
                 {/* Current subscription summary — only when there is one */}
                 {subscription && currentPlanData && (
                     <SubscriptionOverview
@@ -95,7 +93,8 @@ export default function Billing({
                     />
                 )}
 
-                 {flash.success && (
+                {/* Success flash — emerald */}
+                {flash.success && (
                     <Alert className="mb-4 border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-50">
                         <CheckCircle2 />
                         <AlertTitle>Success</AlertTitle>
@@ -118,8 +117,8 @@ export default function Billing({
                         <AlertTriangle />
                         <AlertTitle>Checkout cancelled</AlertTitle>
                         <AlertDescription>
-                            You have not been charged. You can try again whenever
-                            you're ready.
+                            You have not been charged. You can try again
+                            whenever you're ready.
                         </AlertDescription>
                     </Alert>
                 )}
@@ -137,6 +136,12 @@ export default function Billing({
                         const isSwitching = Boolean(
                             currentPlan && currentPlan !== 'starter',
                         );
+
+                        // Whether the action button should render with the
+                        // primary-colored treatment. This is the condition
+                        // that used to gate `variant="default"` — the beam
+                        // button takes over from here.
+                        const isPrimary = isSwitching || isPro;
 
                         return (
                             <Card
@@ -198,28 +203,50 @@ export default function Billing({
                                         className="mt-8 h-12 w-full rounded-full text-base"
                                         disabled={isCurrent}
                                     >
-                                        {isCurrent ? 'Current plan' : 'Included by default'}
+                                        {isCurrent
+                                            ? 'Current plan'
+                                            : 'Included by default'}
                                     </Button>
                                 ) : isCurrent ? (
                                     <Button
                                         variant="destructive"
                                         className="mt-8 h-12 w-full rounded-full text-base"
                                         onClick={cancel}
-                                        disabled={subscription?.on_grace_period}
+                                        disabled={
+                                            subscription?.on_grace_period
+                                        }
                                     >
                                         {subscription?.on_grace_period
                                             ? 'Cancellation scheduled'
                                             : 'Cancel subscription'}
                                     </Button>
-                                ) : (
-                                    <Button
-                                        className="mt-8 h-12 w-full rounded-full text-base"
-                                        variant={isSwitching || isPro ? 'default' : 'outline'}
+                                ) : isPrimary ? (
+                                    /* Primary action (Pro, or any plan while
+                                       switching) — gets the animated beam
+                                       around the pill. */
+                                    <BorderBeamButton
+                                        type="button"
+                                        variant="secondary"
+                                        colorVariant="colorful"
+                                        beamSize="md"
+                                        borderBeamClassName="mt-8 w-full!"
+                                        className="h-12 w-full gap-2 rounded-full text-base font-semibold"
                                         onClick={() => subscribe(plan)}
                                     >
                                         {isSwitching
                                             ? 'Switch to this plan'
                                             : 'Get started'}
+                                    </BorderBeamButton>
+                                ) : (
+                                    /* Secondary action (Enterprise when the
+                                       user isn't switching) — plain outline,
+                                       no beam, preserves the visual hierarchy. */
+                                    <Button
+                                        variant="outline"
+                                        className="mt-8 h-12 w-full rounded-full text-base"
+                                        onClick={() => subscribe(plan)}
+                                    >
+                                        Get started
                                     </Button>
                                 )}
 

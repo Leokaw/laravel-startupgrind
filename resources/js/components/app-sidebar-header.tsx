@@ -4,6 +4,7 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { CreditBalanceButton } from '@/components/credit-balance-button';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import AppearanceDropdown from './appearance-dropdown';
+import { HeaderUserMenu } from './header-user-menu';
 
 export function AppSidebarHeader({
     breadcrumbs = [],
@@ -22,6 +23,7 @@ export function AppSidebarHeader({
                 <LanguageSwitcher />
                 <AppearanceDropdown />
                 <CreditBalanceButton />
+                  <HeaderUserMenu /> 
             </div>
         </header>
     );

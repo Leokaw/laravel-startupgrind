@@ -148,6 +148,20 @@ export function NavMain() {
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
+
+            <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={isCurrentUrl('/billing')}
+                        tooltip={{ children: 'Billing' }}
+                        className={cn(activeClasses, itemMotion)}
+                    >
+                        <Link href="/billing" prefetch>
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            <span>Billing</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
             </SidebarMenu>
             
         </SidebarGroup>

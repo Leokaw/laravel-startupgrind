@@ -196,7 +196,7 @@ export default function Profile({
                                     rows={5}
                                     maxLength={1000}
                                     defaultValue={auth.user.description ?? ''}
-                                    placeholder="A short bio — what you build, who you help, what you're looking for. (Optional)"
+                                    placeholder="A short bio about yourself, what you build, who you help, what you're looking for. (Optional)"
                                     className={textareaClasses}
                                 />
 
