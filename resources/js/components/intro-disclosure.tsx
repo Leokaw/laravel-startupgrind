@@ -83,7 +83,10 @@ export function IntroDisclosure({
 
     return (
         <Dialog open={open} onOpenChange={(o) => !o && close(false)}>
-            <DialogContent className="max-w-lg overflow-hidden p-0">
+            <DialogContent
+                showCloseButton={false}
+                className="max-w-lg overflow-hidden p-0"
+            >
                 <div className="relative">
                     {showProgressBar && (
                         <div className="absolute inset-x-0 top-0 flex h-1 gap-1">
