@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Support\ServiceCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -12,16 +13,8 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -34,6 +27,9 @@ class UserFactory extends Factory
             'company_id'         => null,
             'approved_at'        => null,
             'profile_photo_path' => null,
+            // Both optional and null by default — states below fill them.
+            'description'        => null,
+            'area_of_work'       => null,
         ];
     }
 
@@ -41,9 +37,6 @@ class UserFactory extends Factory
      |  Account-type states
      | ----------------------------------------------------------------- */
 
-    /**
-     * An approved company account.
-     */
     public function company(): static
     {
         return $this->state(fn () => [
@@ -52,9 +45,6 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * A company account awaiting admin approval.
-     */
     public function pendingCompany(): static
     {
         return $this->state(fn () => [
@@ -63,9 +53,6 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * A freelancer account.
-     */
     public function freelancer(): static
     {
         return $this->state(fn () => [
@@ -74,9 +61,6 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * A community member (normal user).
-     */
     public function community(): static
     {
         return $this->state(fn () => [
@@ -85,10 +69,18 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * An employee belonging to the given company.
-     * Verified by default (they've already accepted the invite).
-     */
+    /* -----------------------------------------------------------------
+     |  Employee states
+     | ----------------------------------------------------------------- */
+
+    public function employee(): static
+    {
+        return $this->state(fn () => [
+            'user_type'  => User::TYPE_EMPLOYEE,
+            'company_id' => null,
+        ]);
+    }
+
     public function employeeOf(User $company): static
     {
         return $this->state(fn () => [
@@ -97,10 +89,12 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * An employee that has been invited but hasn't accepted yet.
-     */
     public function unverifiedEmployeeOf(User $company): static
+    {
+        return $this->pendingEmployeeOf($company);
+    }
+
+    public function pendingEmployeeOf(User $company): static
     {
         return $this->state(fn () => [
             'user_type'         => User::TYPE_EMPLOYEE,
@@ -110,7 +104,44 @@ class UserFactory extends Factory
     }
 
     /* -----------------------------------------------------------------
-     |  Misc states (kept from the original)
+     |  Profile-detail states
+     | ----------------------------------------------------------------- */
+
+    /**
+     * Populate both optional profile fields with plausible content.
+     * Area of work is picked from the same enum the profile form uses,
+     * so generated data always passes `ProfileUpdateRequest::rules()`.
+     */
+    public function withProfile(): static
+    {
+        return $this->state(function () {
+            $areas = array_keys(ServiceCategory::all());
+
+            return [
+                'description'  => fake()->paragraphs(2, true),
+                'area_of_work' => fake()->randomElement($areas),
+            ];
+        });
+    }
+
+    /**
+     * Set a specific area-of-work key (must be a valid ServiceCategory).
+     */
+    public function areaOfWork(string $key): static
+    {
+        return $this->state(fn () => ['area_of_work' => $key]);
+    }
+
+    /**
+     * Set a specific bio.
+     */
+    public function withDescription(string $description): static
+    {
+        return $this->state(fn () => ['description' => $description]);
+    }
+
+    /* -----------------------------------------------------------------
+     |  Misc
      | ----------------------------------------------------------------- */
 
     public function unverified(): static

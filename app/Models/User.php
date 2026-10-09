@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Observers\UserObserver;
+use App\Support\ServiceCategory;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'two_factor_recovery_codes',
         'remember_token',
     ];
+
     protected $with = ['membership'];
 
     protected $fillable = [
@@ -40,9 +42,12 @@ class User extends Authenticatable
         'password',
         'user_type',
         'company_id',
-        'profile_photo_path',   // ← new
+        'profile_photo_path',
         'email_verified_at',
         'approved_at',
+        // 👇 new
+        'description',
+        'area_of_work',
     ];
 
     protected function casts(): array
@@ -53,6 +58,10 @@ class User extends Authenticatable
             'password'          => 'hashed',
         ];
     }
+
+    /* -----------------------------------------------------------------
+     |  Profile
+     | ----------------------------------------------------------------- */
 
     /**
      * Public URL of the user's profile photo, or a generated fallback
@@ -73,11 +82,40 @@ class User extends Authenticatable
         });
     }
 
+    /**
+     * Human-readable label for `area_of_work`.
+     * Returns null when unset, or the raw key if it's no longer in the
+     * ServiceCategory enum (e.g. an old value after a schema change).
+     */
+    protected function areaOfWorkLabel(): Attribute
+    {
+        return Attribute::get(function () {
+            if (empty($this->area_of_work)) {
+                return null;
+            }
+
+            return ServiceCategory::label($this->area_of_work)
+                ?? $this->area_of_work;
+        });
+    }
 
     public function hasCustomProfilePhoto(): bool
     {
         return ! empty($this->profile_photo_path);
     }
+
+    /**
+     * True when the user has filled in at least one of the optional
+     * "about me" fields. Useful for nudging them to complete onboarding.
+     */
+    public function hasProfileDetails(): bool
+    {
+        return ! empty($this->description) || ! empty($this->area_of_work);
+    }
+
+    /* -----------------------------------------------------------------
+     |  Relationships
+     | ----------------------------------------------------------------- */
 
     public function company(): BelongsTo
     {
@@ -92,10 +130,6 @@ class User extends Authenticatable
     public function membership(): HasOne
     {
         return $this->hasOne(Membership::class);
-    }
-    public function canInvite(): bool
-    {
-        return $this->isCompany() && $this->approved_at !== null;
     }
 
     public function discountTickets(): HasMany
@@ -116,6 +150,15 @@ class User extends Authenticatable
     public function companyServices(): HasMany
     {
         return $this->hasMany(CompanyService::class);
+    }
+
+    /* -----------------------------------------------------------------
+     |  Type helpers
+     | ----------------------------------------------------------------- */
+
+    public function canInvite(): bool
+    {
+        return $this->isCompany() && $this->approved_at !== null;
     }
 
     public function isCompany(): bool

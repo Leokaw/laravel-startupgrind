@@ -16,8 +16,12 @@ class CommunityController extends Controller
         $users = User::query()
             ->with([
                 'company:id,name',
-                'companyServices' => fn($q) => $q->where('is_active', true),
-                'discountTickets' => fn($q) => $q->where('is_active', true),
+                'companyServices' => fn ($q) => $q->where('is_active', true),
+                'discountTickets' => fn ($q) => $q->where('is_active', true),
+                // Employees belonging to any company in this page.
+                // For non-company users this returns an empty collection
+                // — no per-row branching required.
+                'employees' => fn ($q) => $q->orderBy('name'),
             ])
             ->where('id', '!=', $me->id)
             ->when($request->input('search'), function ($query, $search) {
@@ -32,13 +36,12 @@ class CommunityController extends Controller
             ->orderBy('name')
             ->paginate(7)
             ->withQueryString()
-            ->through(fn(User $user) => $this->serialize($user));
+            ->through(fn (User $user) => $this->serialize($user));
 
-        // Also load the current user's own services/tickets so their card
-        // matches the shape (even though the Interact button is disabled).
         $me->load([
-            'companyServices' => fn($q) => $q->where('is_active', true),
-            'discountTickets' => fn($q) => $q->where('is_active', true),
+            'companyServices' => fn ($q) => $q->where('is_active', true),
+            'discountTickets' => fn ($q) => $q->where('is_active', true),
+            'employees'       => fn ($q) => $q->orderBy('name'),
         ]);
 
         return Inertia::render('community/index', [
@@ -69,8 +72,7 @@ class CommunityController extends Controller
             'email_verified_at'        => $user->email_verified_at,
             'approved_at'              => $user->approved_at,
 
-            // Nested collections for the interact modal.
-            'services' => $user->companyServices->map(fn($service) => [
+            'services' => $user->companyServices->map(fn ($service) => [
                 'id'          => $service->id,
                 'name'        => $service->name,
                 'description' => $service->description,
@@ -78,7 +80,7 @@ class CommunityController extends Controller
                 'category'    => $service->category,
             ])->values()->all(),
 
-            'tickets' => $user->discountTickets->map(fn($ticket) => [
+            'tickets' => $user->discountTickets->map(fn ($ticket) => [
                 'id'                  => $ticket->id,
                 'code'                => $ticket->code,
                 'name'                => $ticket->name,
@@ -89,6 +91,17 @@ class CommunityController extends Controller
                 'valid_until'         => $ticket->valid_until,
                 'usage_limit'         => $ticket->usage_limit,
                 'times_used'          => $ticket->times_used,
+            ])->values()->all(),
+
+            // Only populated for company accounts — empty for everyone else.
+            'employees' => $user->employees->map(fn (User $employee) => [
+                'id'                       => $employee->id,
+                'name'                     => $employee->name,
+                'email'                    => $employee->email,
+                'profile_photo_url'        => $employee->profile_photo_url,
+                'has_custom_profile_photo' => $employee->hasCustomProfilePhoto(),
+                'email_verified_at'        => $employee->email_verified_at,
+                'created_at'               => $employee->created_at?->toIso8601String(),
             ])->values()->all(),
         ];
     }

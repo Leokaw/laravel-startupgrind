@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\MembershipTier;
 use App\Support\ServiceCategory;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -67,13 +68,20 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
 
+            // Feature-gate the "Team" tab in the user interaction modal.
+            // True only when the current user has an active Pro (or higher)
+            // membership. Guests and Free-tier users see the upsell prompt.
+            'can_view_team' => $user?->membership
+                ? $user->membership->isAtLeast(MembershipTier::PRO)
+                : false,
+
             'unreadNotificationsCount' => $user
                 ? $user->unreadNotifications()->count()
                 : 0,
 
             'flash' => [
-                'success' => fn() => $request->session()->get('success'),
-                'error'   => fn() => $request->session()->get('error'),
+                'success' => fn () => $request->session()->get('success'),
+                'error'   => fn () => $request->session()->get('error'),
             ],
 
             'sidebarOpen' => ! $request->hasCookie('sidebar_state')

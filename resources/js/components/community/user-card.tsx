@@ -55,6 +55,15 @@ type User = {
         discount_percentage: number | string | null;
         discount_amount: number | string | null;
     }[];
+    employees: {
+        id: string;
+        name: string;
+        email: string;
+        profile_photo_url: string;
+        has_custom_profile_photo: boolean;
+        email_verified_at: string | null;
+        created_at: string | null;
+    }[];
 };
 
 type Props = {
@@ -88,8 +97,9 @@ const userTypeStyles: Record<
 };
 
 export function UserCard({ user }: Props) {
-    const { auth } = usePage().props as unknown as {
+    const { auth, can_view_team } = usePage().props as unknown as {
         auth: { user: { id: string } | null };
+        can_view_team: boolean;
     };
     const isCurrentUser = auth?.user?.id === user.id;
 
@@ -160,9 +170,6 @@ export function UserCard({ user }: Props) {
                     isCurrentUser && 'ring-2 ring-primary/60 dark:ring-primary/50',
                 )}
             >
-                {/* -----------------------------------------------------------
-                 |  Media — avatar, overlay, type pin, camera & trash controls
-                 | ----------------------------------------------------------- */}
                 <CutoutCardMedia
                     className="aspect-square"
                     onMouseEnter={() => setHovering(true)}
@@ -182,7 +189,6 @@ export function UserCard({ user }: Props) {
 
                     <CutoutCardOverlay />
 
-                    {/* Trash overlay on hover (own card only) */}
                     {showTrash && (
                         <button
                             type="button"
@@ -196,7 +202,6 @@ export function UserCard({ user }: Props) {
                         </button>
                     )}
 
-                    {/* User type pin — top-right with cutout corners */}
                     <CutoutCardPin
                         className={cn(
                             'top-0 right-0 rounded-bl-[16px] px-3 py-1.5 text-xs font-semibold shadow-md',
@@ -220,7 +225,6 @@ export function UserCard({ user }: Props) {
                         />
                     </CutoutCardPin>
 
-                    {/* Camera button — top-left, own card only */}
                     {isCurrentUser && (
                         <>
                             <input
@@ -256,10 +260,6 @@ export function UserCard({ user }: Props) {
                     )}
                 </CutoutCardMedia>
 
-                {/* -----------------------------------------------------------
-                 |  Content — name, "You" badge, email (with bottom spacer
-                 |  so the hover-revealed action doesn't cover text)
-                 | ----------------------------------------------------------- */}
                 <CutoutCardContent className="pb-16">
                     <motion.div
                         className="contents"
@@ -290,11 +290,6 @@ export function UserCard({ user }: Props) {
                     </motion.div>
                 </CutoutCardContent>
 
-                {/* -----------------------------------------------------------
-                 |  Action — same pill as events, revealed on hover
-                 |  For your own card, show the disabled "This is you" button
-                 |  inside the action region but always visible.
-                 | ----------------------------------------------------------- */}
                 {isCurrentUser ? (
                     <div className="absolute bottom-5 left-5 right-5">
                         <Button
@@ -330,7 +325,6 @@ export function UserCard({ user }: Props) {
                 )}
             </CutoutCard>
 
-            {/* Modal — mounted only when open, so state resets on close */}
             {interactOpen && (
                 <UserInteractModal
                     user={user}
@@ -338,6 +332,8 @@ export function UserCard({ user }: Props) {
                     onOpenChange={setInteractOpen}
                     services={user.services ?? []}
                     tickets={user.tickets ?? []}
+                    employees={user.employees ?? []}
+                    canViewTeam={can_view_team}
                 />
             )}
         </>
