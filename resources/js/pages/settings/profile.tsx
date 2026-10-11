@@ -1,6 +1,6 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ChevronDown, Tag } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
@@ -43,9 +43,12 @@ export default function Profile({
 }: Props) {
     const { auth } = usePage<PageProps>().props;
 
-    // Controlled state for the dropdown. Mirrors `defaultValue` behavior
-    // for the plain inputs, but the dropdown needs it to display the
-    // selected label and to keep the hidden input in sync.
+    // The profile page is behind `auth` middleware, so a user is always
+    // present at runtime. This guard just satisfies TypeScript.
+    if (!auth.user) {
+        return null;
+    }
+
     const [areaOfWork, setAreaOfWork] = useState<string>(
         auth.user.area_of_work ?? '',
     );
@@ -78,7 +81,7 @@ export default function Profile({
                                 <Input
                                     id="name"
                                     className="mt-1 block w-full"
-                                    defaultValue={auth.user.name}
+                                    defaultValue={auth.user!.name}
                                     name="name"
                                     required
                                     autoComplete="name"
@@ -98,7 +101,7 @@ export default function Profile({
                                     id="email"
                                     type="email"
                                     className="mt-1 block w-full"
-                                    defaultValue={auth.user.email}
+                                    defaultValue={auth.user!.email}
                                     name="email"
                                     required
                                     autoComplete="username"
@@ -117,9 +120,6 @@ export default function Profile({
                                     Area of work
                                 </Label>
 
-                                {/* Hidden input carries the value with the
-                                    form submission — the dropdown itself
-                                    is not a form control. */}
                                 <input
                                     type="hidden"
                                     name="area_of_work"
@@ -153,7 +153,6 @@ export default function Profile({
                                                     : 'Pick what you work on (optional)'}
                                             </span>
 
-                                            <Tag className="pointer-events-none absolute right-9 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                             <ChevronDown className="pointer-events-none h-4 w-4 shrink-0 opacity-50" />
                                         </button>
                                     </DropdownMenuTrigger>
@@ -195,7 +194,7 @@ export default function Profile({
                                     name="description"
                                     rows={5}
                                     maxLength={1000}
-                                    defaultValue={auth.user.description ?? ''}
+                                    defaultValue={auth.user!.description ?? ''}
                                     placeholder="A short bio about yourself, what you build, who you help, what you're looking for. (Optional)"
                                     className={textareaClasses}
                                 />
@@ -207,7 +206,7 @@ export default function Profile({
                             </div>
 
                             {mustVerifyEmail &&
-                                auth.user.email_verified_at === null && (
+                                auth.user!.email_verified_at === null && (
                                     <div>
                                         <p className="-mt-4 text-sm text-muted-foreground">
                                             Your email address is unverified.{' '}

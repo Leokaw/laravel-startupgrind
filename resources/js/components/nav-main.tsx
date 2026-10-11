@@ -9,6 +9,7 @@ import {
     CreditCard,
     CalendarDays,
 } from 'lucide-react';
+import { BorderBeam } from 'border-beam';
 import {
     SidebarGroup,
     SidebarGroupLabel,
@@ -31,6 +32,14 @@ const activeClasses =
 const itemMotion =
     'transition-colors duration-200 ease-out ' +
     'motion-reduce:transition-none';
+
+/**
+ * Shared beam wrapper classes. `w-full min-w-0` stops the beam's default
+ * `w-fit` from shrinking the item to its content width, and the flex
+ * setup stretches the inner link to fill the container.
+ */
+const beamWrapperClasses =
+    'w-full min-w-0 flex-col items-stretch overflow-visible!';
 
 export function NavMain() {
     const { isCurrentUrl } = useCurrentUrl();
@@ -99,19 +108,7 @@ export function NavMain() {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                <SidebarMenuItem>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isCurrentUrl('/community')}
-                        tooltip={{ children: 'Community' }}
-                        className={cn(activeClasses, itemMotion)}
-                    >
-                        <Link href="/community" prefetch>
-                            <Users className="mr-2 h-4 w-4" />
-                            <span>Community</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
+             
 
                 <SidebarMenuItem>
                     <SidebarMenuButton
@@ -134,22 +131,9 @@ export function NavMain() {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
 
-               
-                <SidebarMenuItem>
-                <SidebarMenuButton
-                    asChild
-                    isActive={isCurrentUrl('/events')}
-                    tooltip={{ children: 'Events' }}
-                    className={cn(activeClasses, itemMotion)}
-                >
-                    <Link href="/events" prefetch>
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        <span>Events</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
+                
 
-            <SidebarMenuItem>
+                <SidebarMenuItem>
                     <SidebarMenuButton
                         asChild
                         isActive={isCurrentUrl('/billing')}
@@ -162,8 +146,54 @@ export function NavMain() {
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
+
+
+                   {/* Community — always has the animated beam */}
+                <SidebarMenuItem>
+                    <BorderBeam
+                        size="sm"
+                        colorVariant="colorful"
+                        className={beamWrapperClasses}
+                    >
+                        <SidebarMenuButton
+                            asChild
+                            isActive={isCurrentUrl('/community')}
+                            tooltip={{ children: 'Community' }}
+                            className={cn(activeClasses, itemMotion)}
+                        >
+                            <Link href="/community" prefetch>
+                                <Users className="mr-2 h-4 w-4" />
+                                <span>Community</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </BorderBeam>
+                </SidebarMenuItem>
+
+
+                {/* Events — always has the animated beam */}
+                <SidebarMenuItem>
+                    <BorderBeam
+                        size="sm"
+                        colorVariant="colorful"
+                
+                        className={beamWrapperClasses}
+                    >
+                        <SidebarMenuButton
+                            asChild
+                            
+                            isActive={isCurrentUrl('/events')}
+                            tooltip={{ children: 'Events' }}
+                        
+                            className={cn(activeClasses, itemMotion)}
+                        >
+                            <Link href="/events" prefetch>
+                                <CalendarDays className="mr-2 h-4 w-4" />
+                                <span>Events</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </BorderBeam>
+                </SidebarMenuItem>
             </SidebarMenu>
-            
         </SidebarGroup>
     );
 }

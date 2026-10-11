@@ -12,13 +12,13 @@ class DiscountTicket extends Model
     use HasUuids, HasFactory;
 
     protected $fillable = [
-        'user_id',              // ← was missing
+        'user_id',
         'code',
         'name',
         'description',
+        'event_url',
         'discount_percentage',
         'discount_amount',
-        'valid_from',
         'valid_until',
         'usage_limit',
         'times_used',
@@ -26,7 +26,6 @@ class DiscountTicket extends Model
     ];
 
     protected $dates = [
-        'valid_from',
         'valid_until',
         'created_at',
         'updated_at',

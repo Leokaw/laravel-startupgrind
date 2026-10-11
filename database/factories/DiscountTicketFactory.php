@@ -16,33 +16,35 @@ class DiscountTicketFactory extends Factory
 
     public function definition(): array
     {
-        // A ticket is either percentage-based OR amount-based — never both.
         $isPercentage = fake()->boolean(70);
 
         return [
             'user_id'             => User::factory(),
-            'code'                => 'DISC-' . strtoupper(Str::random(8)),
+            'code'                => 'DISC-'.strtoupper(Str::random(8)),
             'name'                => Str::title(fake()->words(rand(2, 4), true)),
             'description'         => fake()->sentence(rand(8, 15)),
+            'event_url'           => 'https://www.startupgrind.com/events/details/'
+                . Str::slug(fake()->words(rand(3, 6), true)),
             'discount_percentage' => $isPercentage
                 ? fake()->randomFloat(2, 5, 50)
                 : null,
             'discount_amount'     => $isPercentage
                 ? null
                 : fake()->randomFloat(2, 5, 100),
-            'valid_from'          => now(),
             'valid_until'         => now()->addDays(rand(7, 90)),
-            // ~70% have a usage cap; the rest are unlimited.
             'usage_limit'         => fake()->boolean(70) ? rand(10, 500) : null,
             'times_used'          => 0,
             'is_active'           => fake()->boolean(90),
         ];
     }
 
+    /* -----------------------------------------------------------------
+     |  State modifiers
+     | ----------------------------------------------------------------- */
+
     public function expired(): static
     {
         return $this->state(fn () => [
-            'valid_from'  => now()->subDays(60),
             'valid_until' => now()->subDays(30),
             'is_active'   => false,
         ]);
@@ -67,9 +69,19 @@ class DiscountTicketFactory extends Factory
     public function exhausted(): static
     {
         return $this->state(fn () => [
-            'times_used' => 10,
+            'times_used'  => 10,
             'usage_limit' => 10,
             'is_active'   => false,
         ]);
+    }
+
+    public function withEventUrl(string $url): static
+    {
+        return $this->state(fn () => ['event_url' => $url]);
+    }
+
+    public function withoutEventUrl(): static
+    {
+        return $this->state(fn () => ['event_url' => null]);
     }
 }

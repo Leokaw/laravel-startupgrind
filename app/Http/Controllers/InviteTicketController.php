@@ -15,14 +15,14 @@ use Inertia\Response;
 
 class InviteTicketController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         $company = $this->authorizedCompany($request->user());
 
-        // Show every invite sent by the company itself *or* by any of
-        // its employees. The inviter's user_id is the company id for
-        // company-sent invites, and the employee id otherwise — so we
-        // match against both.
+        if (! $company) {
+            return $this->unauthorized();
+        }
+
         $inviteTickets = InviteTicket::with(['user', 'acceptedBy'])
             ->whereHas('user', function ($q) use ($company) {
                 $q->where('id', $company->id)
@@ -36,9 +36,13 @@ class InviteTicketController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
+    public function create(Request $request): Response|RedirectResponse
     {
-        $this->authorizedCompany($request->user());
+        $company = $this->authorizedCompany($request->user());
+
+        if (! $company) {
+            return $this->unauthorized();
+        }
 
         return Inertia::render('tickets/invite/create');
     }
@@ -46,6 +50,10 @@ class InviteTicketController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $company = $this->authorizedCompany($request->user());
+
+        if (! $company) {
+            return $this->unauthorized();
+        }
 
         $validated = $request->validate([
             'invited_name'  => ['required', 'string', 'max:50'],
@@ -61,8 +69,6 @@ class InviteTicketController extends Controller
         $tempPassword = Str::password(12, symbols: false);
         $hashed       = Hash::make($tempPassword);
 
-        // The invitee joins *the company*, regardless of whether the
-        // invite was sent by the company owner or one of their employees.
         User::create([
             'name'              => $validated['invited_name'],
             'email'             => $validated['invited_email'],
@@ -72,8 +78,6 @@ class InviteTicketController extends Controller
             'email_verified_at' => null,
         ]);
 
-        // The invite record belongs to the actual sender for audit
-        // purposes — company owner or employee.
         $invite = $request->user()->inviteTickets()->create([
             'code'               => $this->generateUniqueCode(),
             'invited_name'       => $validated['invited_name'],
@@ -102,29 +106,42 @@ class InviteTicketController extends Controller
     }
 
     /**
-     * Ensure the user is allowed to send invites and return the company
-     * they act on behalf of.
-     *
-     *   - Companies (approved) → returns the company itself.
-     *   - Employees of an approved company → returns their company.
-     *   - Everyone else → 403.
+     * Resolve the company the user acts on behalf of, or null if they
+     * aren't allowed to send invites. Never throws — callers route the
+     * failure through `unauthorized()` so the frontend can show an
+     * AlertDialog instead of a 403 page.
      */
-    protected function authorizedCompany(?User $user): User
+    protected function authorizedCompany(?User $user): ?User
     {
         if (! $user) {
-            abort(403, 'You must be signed in to invite users.');
+            return null;
         }
 
         $company = $user->invitableCompany();
 
         if (! $company) {
-            abort(403, 'Only company accounts and their employees can invite users.');
+            return null;
         }
 
         if ($company->approved_at === null) {
-            abort(403, 'Your company account is pending approval.');
+            return null;
         }
 
         return $company;
+    }
+
+    /**
+     * Standard "no permission" response — redirects to the dashboard with
+     * a flash error. The global `FlashErrorDialog` catches `flash.error`
+     * on the destination page and renders the modal.
+     */
+    protected function unauthorized(): RedirectResponse
+    {
+        return redirect()
+            ->route('dashboard')
+            ->with(
+                'error',
+                'Only approved company accounts and their employees can send invitations.',
+            );
     }
 }

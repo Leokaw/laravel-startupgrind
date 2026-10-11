@@ -45,7 +45,6 @@ class User extends Authenticatable
         'profile_photo_path',
         'email_verified_at',
         'approved_at',
-        // 👇 new
         'description',
         'area_of_work',
     ];
@@ -156,11 +155,6 @@ class User extends Authenticatable
      |  Type helpers
      | ----------------------------------------------------------------- */
 
-    public function canInvite(): bool
-    {
-        return $this->isCompany() && $this->approved_at !== null;
-    }
-
     public function isCompany(): bool
     {
         return $this->user_type === self::TYPE_COMPANY;
@@ -169,5 +163,49 @@ class User extends Authenticatable
     public function isFreelancer(): bool
     {
         return $this->user_type === self::TYPE_FREELANCER;
+    }
+
+    public function isEmployee(): bool
+    {
+        return $this->user_type === self::TYPE_EMPLOYEE;
+    }
+
+    /* -----------------------------------------------------------------
+     |  Invite helpers
+     | ----------------------------------------------------------------- */
+
+    /**
+     * Resolve the company this user acts on behalf of when sending
+     * invites.
+     *
+     *   - A company account acts for itself.
+     *   - An employee acts for the company they belong to.
+     *   - Everyone else (community, freelancer) returns null.
+     *
+     * The returned company may still be *unapproved* — callers should
+     * check `approved_at` before allowing the action.
+     */
+    public function invitableCompany(): ?self
+    {
+        if ($this->isCompany()) {
+            return $this;
+        }
+
+        if ($this->isEmployee()) {
+            return $this->company;
+        }
+
+        return null;
+    }
+
+    /**
+     * True when the user is allowed to send invitations at all —
+     * approved company, or an employee of an approved company.
+     */
+    public function canInvite(): bool
+    {
+        $company = $this->invitableCompany();
+
+        return $company !== null && $company->approved_at !== null;
     }
 }

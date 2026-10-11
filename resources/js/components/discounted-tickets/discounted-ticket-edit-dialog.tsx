@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -37,8 +37,8 @@ type DiscountTicket = {
     id: string;
     name: string;
     description: string | null;
+    event_url: string | null;
     discount_percentage: string | null;
-    valid_from: string;
     valid_until: string;
     usage_limit: number | null;
     is_active: boolean;
@@ -51,9 +51,6 @@ type Props = {
 };
 
 export function DiscountTicketEditDialog({ ticket, open, onOpenChange }: Props) {
-    const [validFrom, setValidFrom] = useState<Date | undefined>(
-        ticket.valid_from ? new Date(ticket.valid_from) : undefined,
-    );
     const [validUntil, setValidUntil] = useState<Date | undefined>(
         ticket.valid_until ? new Date(ticket.valid_until) : undefined,
     );
@@ -61,10 +58,8 @@ export function DiscountTicketEditDialog({ ticket, open, onOpenChange }: Props) 
     const { data, setData, patch, processing, errors, clearErrors } = useForm({
         name: ticket.name,
         description: ticket.description ?? '',
+        event_url: ticket.event_url ?? '',
         discount_percentage: ticket.discount_percentage ?? '',
-        valid_from: ticket.valid_from
-            ? format(new Date(ticket.valid_from), 'yyyy-MM-dd')
-            : '',
         valid_until: ticket.valid_until
             ? format(new Date(ticket.valid_until), 'yyyy-MM-dd')
             : '',
@@ -75,16 +70,13 @@ export function DiscountTicketEditDialog({ ticket, open, onOpenChange }: Props) 
         setData({
             name: ticket.name,
             description: ticket.description ?? '',
+            event_url: ticket.event_url ?? '',
             discount_percentage: ticket.discount_percentage ?? '',
-            valid_from: ticket.valid_from
-                ? format(new Date(ticket.valid_from), 'yyyy-MM-dd')
-                : '',
             valid_until: ticket.valid_until
                 ? format(new Date(ticket.valid_until), 'yyyy-MM-dd')
                 : '',
             is_active: ticket.is_active,
         });
-        setValidFrom(ticket.valid_from ? new Date(ticket.valid_from) : undefined);
         setValidUntil(
             ticket.valid_until ? new Date(ticket.valid_until) : undefined,
         );
@@ -119,12 +111,16 @@ export function DiscountTicketEditDialog({ ticket, open, onOpenChange }: Props) 
                     </DialogHeader>
 
                     <div className="space-y-2">
-                        <Label htmlFor="ticket-name">Name</Label>
+                        <Label htmlFor="ticket-name">
+                            Name{' '}
+                            <span className="text-destructive">*</span>
+                        </Label>
                         <Input
                             id="ticket-name"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             maxLength={50}
+                            required
                         />
                         {errors.name && (
                             <p className="text-sm text-destructive">
@@ -134,9 +130,7 @@ export function DiscountTicketEditDialog({ ticket, open, onOpenChange }: Props) 
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="ticket-description">
-                            Description
-                        </Label>
+                        <Label htmlFor="ticket-description">Description</Label>
                         <Textarea
                             id="ticket-description"
                             value={data.description}
@@ -149,6 +143,47 @@ export function DiscountTicketEditDialog({ ticket, open, onOpenChange }: Props) 
                         {errors.description && (
                             <p className="text-sm text-destructive">
                                 {errors.description}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="ticket-event-url">
+                            Event link{' '}
+                            <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative">
+                            <Input
+                                id="ticket-event-url"
+                                type="url"
+                                value={data.event_url}
+                                onChange={(e) =>
+                                    setData('event_url', e.target.value)
+                                }
+                                maxLength={2048}
+                                inputMode="url"
+                                autoComplete="off"
+                                placeholder="https://example.com/event/your-event"
+                                className="pr-9"
+                                aria-invalid={!!errors.event_url}
+                                required
+                            />
+                            <Link2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Must start with{' '}
+                            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">
+                                https://
+                            </code>{' '}
+                            or{' '}
+                            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">
+                                http://
+                            </code>
+                            .
+                        </p>
+                        {errors.event_url && (
+                            <p className="text-sm text-destructive">
+                                {errors.event_url}
                             </p>
                         )}
                     </div>
@@ -176,47 +211,10 @@ export function DiscountTicketEditDialog({ ticket, open, onOpenChange }: Props) 
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="valid_from">Valid From</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <button
-                                    type="button"
-                                    id="valid_from"
-                                    className={cn(
-                                        inputLikeClasses,
-                                        'relative h-9 cursor-pointer items-center text-left',
-                                        !validFrom && 'text-muted-foreground',
-                                    )}
-                                >
-                                    {validFrom
-                                        ? format(validFrom, 'PPP')
-                                        : 'Pick a date'}
-                                    <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end">
-                                <Calendar
-                                    mode="single"
-                                    selected={validFrom}
-                                    onSelect={(d) => {
-                                        setValidFrom(d);
-                                        setData(
-                                            'valid_from',
-                                            d ? format(d, 'yyyy-MM-dd') : '',
-                                        );
-                                    }}
-                                />
-                            </PopoverContent>
-                        </Popover>
-                        {errors.valid_from && (
-                            <p className="text-sm text-destructive">
-                                {errors.valid_from}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="valid_until">Valid Until</Label>
+                        <Label htmlFor="valid_until">
+                            Valid Until{' '}
+                            <span className="text-destructive">*</span>
+                        </Label>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <button
@@ -230,7 +228,7 @@ export function DiscountTicketEditDialog({ ticket, open, onOpenChange }: Props) 
                                 >
                                     {validUntil
                                         ? format(validUntil, 'PPP')
-                                        : 'Pick a date'}
+                                        : 'Pick an expiry date'}
                                     <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 </button>
                             </PopoverTrigger>
@@ -245,7 +243,6 @@ export function DiscountTicketEditDialog({ ticket, open, onOpenChange }: Props) 
                                             d ? format(d, 'yyyy-MM-dd') : '',
                                         );
                                     }}
-                                    disabled={{ before: validFrom ?? new Date() }}
                                 />
                             </PopoverContent>
                         </Popover>

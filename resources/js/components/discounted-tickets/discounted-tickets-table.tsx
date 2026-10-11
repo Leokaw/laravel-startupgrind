@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Tag, TicketPercent } from 'lucide-react';
+import { ExternalLink, Tag, TicketPercent } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,8 +23,8 @@ type DiscountTicket = {
     code: string;
     name: string;
     description: string | null;
+    event_url: string | null;
     discount_percentage: string | null;
-    valid_from: string;
     valid_until: string;
     usage_limit: number | null;
     times_used: number;
@@ -136,8 +136,8 @@ export function DiscountedTicketsTable({ tickets, filters }: Props) {
                             <TableRow>
                                 <TableHead>Code</TableHead>
                                 <TableHead>Name</TableHead>
+                                <TableHead>Link</TableHead>
                                 <TableHead>Discount</TableHead>
-                                <TableHead>Valid From</TableHead>
                                 <TableHead>Valid Until</TableHead>
                                 <TableHead className="text-right">Used</TableHead>
                                 <TableHead>Status</TableHead>
@@ -165,7 +165,27 @@ export function DiscountedTicketsTable({ tickets, filters }: Props) {
                                             {ticket.code}
                                         </TableCell>
                                         <TableCell className="font-medium">
-                                            {ticket.name}
+                                            <span className="truncate">
+                                                {ticket.name}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            {ticket.event_url ? (
+                                                <a
+                                                    href={ticket.event_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    aria-label={`Open event link for ${ticket.name}`}
+                                                    title={ticket.event_url}
+                                                    className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+                                                >
+                                                    <ExternalLink className="size-4" />
+                                                </a>
+                                            ) : (
+                                                <span className="text-muted-foreground">
+                                                    —
+                                                </span>
+                                            )}
                                         </TableCell>
                                         <TableCell className="font-mono">
                                             {ticket.discount_percentage
@@ -173,12 +193,6 @@ export function DiscountedTicketsTable({ tickets, filters }: Props) {
                                                       ticket.discount_percentage,
                                                   ).toFixed(2)}%`
                                                 : '—'}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {format(
-                                                new Date(ticket.valid_from),
-                                                'MMM d, yyyy',
-                                            )}
                                         </TableCell>
                                         <TableCell className="text-muted-foreground">
                                             {format(

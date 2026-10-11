@@ -13,6 +13,7 @@ import {
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
 
 /**
  * Compact avatar-only user menu for the app header.
@@ -35,15 +36,13 @@ export function HeaderUserMenu() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button
-                    type="button"
+                <Button
+                    type='button'
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8 outline !border-none"
                     aria-label="Open user menu"
-                    className={cn(
-                        'focus-visible:ring-ring focus-visible:ring-offset-background rounded-full outline-none transition-transform',
-                        'focus-visible:ring-2 focus-visible:ring-offset-2',
-                        'hover:ring-2 hover:ring-primary/40',
-                        'data-[state=open]:ring-2 data-[state=open]:ring-primary/60',
-                    )}
+
                 >
                     <Avatar className="size-8">
                         {user.has_custom_profile_photo ? (
@@ -60,7 +59,7 @@ export function HeaderUserMenu() {
                             <UserRound className="size-4" />
                         </AvatarFallback>
                     </Avatar>
-                </button>
+                </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent

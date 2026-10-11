@@ -26,6 +26,7 @@ export type IntroStep = {
 };
 
 const ICONS: Record<string, LucideIcon> = {
+    
     sparkles: Sparkles,
     coins: Coins,
     mail: Mail,

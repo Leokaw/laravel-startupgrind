@@ -1,7 +1,14 @@
 import { useForm } from '@inertiajs/react';
 import { FormEvent, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Ticket, Loader2, Coins, Tag, CheckCircle2, Percent } from 'lucide-react';
+import {
+    Ticket,
+    Loader2,
+    Coins,
+    CheckCircle2,
+    ExternalLink,
+    Percent,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +45,7 @@ type DiscountTicket = {
     id: string;
     name: string;
     description: string | null;
+    event_url: string | null;
     discount_percentage: number | string | null;
     discount_amount: number | string | null;
 };
@@ -183,6 +191,18 @@ export function PurchaseTicketForm({
             return `${Number(ticket.discount_amount).toFixed(2)} credits off`;
         }
         return 'Discount';
+    };
+
+    /**
+     * Human-readable hostname for the event link's button. Falls back to
+     * the raw URL if parsing fails.
+     */
+    const eventHost = (url: string): string => {
+        try {
+            return new URL(url).hostname.replace(/^www\./, '');
+        } catch {
+            return url;
+        }
     };
 
     return (
@@ -332,7 +352,6 @@ export function PurchaseTicketForm({
                     <Button
                         type="button"
                         variant="secondary"
-
                         onClick={() => onSuccess?.()}
                         disabled={form.processing}
                     >
@@ -342,15 +361,17 @@ export function PurchaseTicketForm({
                         variant="secondary"
                         colorVariant="colorful"
                         beamSize="md"
-                        type="submit" disabled={form.processing}>
+                        type="submit"
+                        disabled={form.processing}
+                    >
                         {form.processing ? (
                             <>
-                                <Loader2 className=" h-4 w-4 animate-spin" />
+                                <Loader2 className="h-4 w-4 animate-spin" />
                                 Purchasing
                             </>
                         ) : (
                             <>
-                                <Ticket className=" h-4 w-4" />
+                                <Ticket className="h-4 w-4" />
                                 Purchase
                             </>
                         )}
@@ -387,6 +408,38 @@ export function PurchaseTicketForm({
                                         'No description provided.'}
                                 </p>
                             </div>
+
+                            {/* 👇 Event link — rendered as a full-width button */}
+                            {pendingTicket.event_url && (
+                                <div className="space-y-1">
+                                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        Event
+                                    </p>
+                                    <Button
+                                        asChild
+                                        variant="outline"
+                                        className="h-auto w-full justify-start gap-2.5 px-3 py-2.5"
+                                    >
+                                        <a
+                                            href={pendingTicket.event_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                                                <ExternalLink className="size-3.5 text-primary" />
+                                            </span>
+                                            <span className="flex min-w-0 flex-1 flex-col items-start text-left">
+                                                <span className="text-sm font-medium">
+                                                    View event details
+                                                </span>
+                                                <span className="w-full truncate text-xs font-normal text-muted-foreground">
+                                                    {eventHost(pendingTicket.event_url)}
+                                                </span>
+                                            </span>
+                                        </a>
+                                    </Button>
+                                </div>
+                            )}
 
                             <div className="space-y-1 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
                                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -489,12 +542,12 @@ export function PurchaseTicketForm({
                         >
                             {form.processing ? (
                                 <>
-                                    <Loader2 className=" h-4 w-4 animate-spin" />
+                                    <Loader2 className="h-4 w-4 animate-spin" />
                                     Purchasing…
                                 </>
                             ) : (
                                 <>
-                                    <Ticket className=" h-4 w-4" />
+                                    <Ticket className="h-4 w-4" />
                                     Confirm purchase
                                 </>
                             )}

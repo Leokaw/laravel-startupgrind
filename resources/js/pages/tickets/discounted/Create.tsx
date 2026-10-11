@@ -15,6 +15,7 @@ import {
     Type as Text,
     TicketPercent,
     Tag,
+    Link2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -27,7 +28,7 @@ export default function CreateDiscountedTicket() {
     const [success, setSuccess] = useState(false);
     const [nameLength, setNameLength] = useState(0);
     const [descLength, setDescLength] = useState(0);
-    const [validFrom, setValidFrom] = useState<Date | undefined>();
+    const [urlLength, setUrlLength] = useState(0);
     const [validUntil, setValidUntil] = useState<Date | undefined>();
 
     return (
@@ -73,7 +74,7 @@ export default function CreateDiscountedTicket() {
                                 setSuccess(true);
                                 setNameLength(0);
                                 setDescLength(0);
-                                setValidFrom(undefined);
+                                setUrlLength(0);
                                 setValidUntil(undefined);
                             }}
                             resetOnSuccess
@@ -160,6 +161,63 @@ export default function CreateDiscountedTicket() {
                                             )}
                                         </Field>
 
+                                        {/* Event link — REQUIRED */}
+                                        <Field data-invalid={!!errors.event_url}>
+                                            <div className="flex items-center justify-between">
+                                                <FieldLabel htmlFor="event_url">
+                                                    Event link{' '}
+                                                    <span className="text-destructive">
+                                                        *
+                                                    </span>
+                                                </FieldLabel>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {urlLength}/2048
+                                                </span>
+                                            </div>
+                                            <div className="relative">
+                                                <Input
+                                                    id="event_url"
+                                                    type="url"
+                                                    name="event_url"
+                                                    required
+                                                    tabIndex={3}
+                                                    maxLength={2048}
+                                                    autoComplete="off"
+                                                    inputMode="url"
+                                                    placeholder="https://example.com/event/your-event"
+                                                    className="pr-9"
+                                                    aria-invalid={
+                                                        !!errors.event_url
+                                                    }
+                                                    onChange={(e) =>
+                                                        setUrlLength(
+                                                            e.target.value
+                                                                .length,
+                                                        )
+                                                    }
+                                                />
+                                                <Link2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            </div>
+                                            <p className="mt-1.5 text-xs text-muted-foreground">
+                                                Link customers to the event
+                                                this discount applies to. Must
+                                                start with{' '}
+                                                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">
+                                                    https://
+                                                </code>{' '}
+                                                or{' '}
+                                                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">
+                                                    http://
+                                                </code>
+                                                .
+                                            </p>
+                                            {errors.event_url && (
+                                                <FieldError>
+                                                    {errors.event_url}
+                                                </FieldError>
+                                            )}
+                                        </Field>
+
                                         {/* Discount Percentage */}
                                         <Field
                                             data-invalid={
@@ -178,7 +236,7 @@ export default function CreateDiscountedTicket() {
                                                     type="number"
                                                     name="discount_percentage"
                                                     required
-                                                    tabIndex={3}
+                                                    tabIndex={4}
                                                     min="0"
                                                     max="100"
                                                     step="0.01"
@@ -193,69 +251,6 @@ export default function CreateDiscountedTicket() {
                                             {errors.discount_percentage && (
                                                 <FieldError>
                                                     {errors.discount_percentage}
-                                                </FieldError>
-                                            )}
-                                        </Field>
-
-                                        {/* Valid From */}
-                                        <Field data-invalid={!!errors.valid_from}>
-                                            <FieldLabel htmlFor="valid_from">
-                                                Valid From{' '}
-                                                <span className="text-destructive">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <button
-                                                        type="button"
-                                                        id="valid_from"
-                                                        tabIndex={4}
-                                                        aria-invalid={
-                                                            !!errors.valid_from
-                                                        }
-                                                        className={cn(
-                                                            inputLikeClasses,
-                                                            'relative h-9 cursor-pointer items-center text-left',
-                                                            !validFrom &&
-                                                                'text-muted-foreground',
-                                                        )}
-                                                    >
-                                                        {validFrom
-                                                            ? format(
-                                                                  validFrom,
-                                                                  'PPP',
-                                                              )
-                                                            : 'Pick a date'}
-                                                        <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                                    </button>
-                                                </PopoverTrigger>
-                                                <PopoverContent
-                                                    className="w-auto p-0"
-                                                    align="end"
-                                                >
-                                                    <Calendar
-                                                        mode="single"
-                                                        selected={validFrom}
-                                                        onSelect={setValidFrom}
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
-                                            <input
-                                                type="hidden"
-                                                name="valid_from"
-                                                value={
-                                                    validFrom
-                                                        ? format(
-                                                              validFrom,
-                                                              'yyyy-MM-dd',
-                                                          )
-                                                        : ''
-                                                }
-                                            />
-                                            {errors.valid_from && (
-                                                <FieldError>
-                                                    {errors.valid_from}
                                                 </FieldError>
                                             )}
                                         </Field>
@@ -289,7 +284,7 @@ export default function CreateDiscountedTicket() {
                                                                   validUntil,
                                                                   'PPP',
                                                               )
-                                                            : 'Pick a date'}
+                                                            : 'Pick an expiry date'}
                                                         <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                                     </button>
                                                 </PopoverTrigger>
@@ -302,9 +297,7 @@ export default function CreateDiscountedTicket() {
                                                         selected={validUntil}
                                                         onSelect={setValidUntil}
                                                         disabled={{
-                                                            before:
-                                                                validFrom ??
-                                                                new Date(),
+                                                            before: new Date(),
                                                         }}
                                                     />
                                                 </PopoverContent>
@@ -321,6 +314,10 @@ export default function CreateDiscountedTicket() {
                                                         : ''
                                                 }
                                             />
+                                            <p className="mt-1.5 text-xs text-muted-foreground">
+                                                Tickets are valid from the
+                                                moment they're created.
+                                            </p>
                                             {errors.valid_until && (
                                                 <FieldError>
                                                     {errors.valid_until}
