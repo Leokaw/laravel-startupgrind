@@ -11,11 +11,6 @@ import SettingsLayout from '@/layouts/settings/layout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-/**
- * Root providers. Kept as a real component so hooks like `useFlashToast`
- * run inside the React tree — `withApp`'s function body alone isn't a
- * component, so hooks can't live there directly.
- */
 function RootProviders({ children }: { children: ReactNode }) {
     useFlashToast();
 

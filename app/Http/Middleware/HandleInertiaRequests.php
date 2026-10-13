@@ -9,38 +9,17 @@ use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
-     *
-     * @return array<string, mixed>
-     */
     public function share(Request $request): array
     {
         $user = $request->user();
 
-        // Eager-load only the columns we need so this stays cheap.
-        // loadMissing() is a no-op if it's already loaded elsewhere.
         $user?->loadMissing('membership:id,user_id,credits_balance,tier,status');
 
         return [
@@ -49,18 +28,25 @@ class HandleInertiaRequests extends Middleware
             'serviceCategories' => ServiceCategory::all(),
             'name'              => config('app.name'),
 
+            // Onboarding gate — drives the first-login modal.
+            // Null for guests; a payload when the user exists.
+            'onboarding' => fn() => $user ? [
+           'required'   => $user->onboarded_at === null,
+
+                'categories' => ServiceCategory::all(),
+            ] : null,
+
             'auth' => [
                 'user' => $user ? [
-                    'id'                  => $user->id,
-                    'name'                => $user->name,
-                    'email'               => $user->email,
-                    'user_type'           => $user->user_type,
-                    'approved_at'         => $user->approved_at,
-                    'email_verified_at'   => $user->email_verified_at,
-                    'profile_photo_url'   => $user->profile_photo_url,
-                     'has_custom_profile_photo' => $user->hasCustomProfilePhoto(), 
+                    'id'                       => $user->id,
+                    'name'                     => $user->name,
+                    'email'                    => $user->email,
+                    'user_type'                => $user->user_type,
+                    'approved_at'              => $user->approved_at,
+                    'email_verified_at'        => $user->email_verified_at,
+                    'profile_photo_url'        => $user->profile_photo_url,
+                    'has_custom_profile_photo' => $user->hasCustomProfilePhoto(),
 
-                    // Membership is optional — a user may not have one yet.
                     'membership' => $user->membership ? [
                         'tier'            => $user->membership->tier,
                         'status'          => $user->membership->status,
@@ -69,9 +55,6 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
 
-            // Feature-gate the "Team" tab in the user interaction modal.
-            // True only when the current user has an active Pro (or higher)
-            // membership. Guests and Free-tier users see the upsell prompt.
             'can_view_team' => $user?->membership
                 ? $user->membership->isAtLeast(MembershipTier::PRO)
                 : false,
@@ -81,12 +64,13 @@ class HandleInertiaRequests extends Middleware
                 : 0,
 
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error'   => fn () => $request->session()->get('error'),
+                'success' => fn() => $request->session()->get('success'),
+                'error'   => fn() => $request->session()->get('error'),
+                'toast'   => fn() => $request->session()->get('toast'),
             ],
 
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state')
-                || $request->cookie('sidebar_state') === 'true',
+         'sidebarOpen' => ! $request->hasCookie('sidebar_state')
+    || $request->cookie('sidebar_state') === 'true',
         ];
     }
 }

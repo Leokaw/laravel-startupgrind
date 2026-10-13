@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
     AlertTriangle,
     Building2,
@@ -21,6 +21,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { BorderBeamButton } from '@/components/ui/border-beam-button';
 import {
+    IntroDisclosure,
+    type IntroStep,
+} from '@/components/intro-disclosure';
+import {
     SubscriptionOverview,
     type Subscription,
 } from './subscription-overview';
@@ -34,6 +38,13 @@ type Plan = {
     icon: 'star' | 'zap' | 'building';
     badge: string | null;
     features: string[];
+    tour_perks: IntroStep[];
+};
+
+type SubscriptionToken = {
+    token: string;
+    status: 'ready' | 'completed';
+    plan_slug: string;
 };
 
 type FlashToast = {
@@ -45,6 +56,7 @@ type Props = {
     plans: Plan[];
     currentPlan: string | null;
     subscription: Subscription | null;
+    subscriptionToken: SubscriptionToken | null;
     flash: {
         success: string | null;
         error: string | null;
@@ -76,9 +88,26 @@ export default function Billing({
     plans,
     currentPlan,
     subscription,
+    subscriptionToken,
     flash,
 }: Props) {
     const [processing, setProcessing] = useState(false);
+    const [tourOpen, setTourOpen] = useState(false);
+
+    // Resolve the perks from the token's plan. Falls back to the user's
+    // current plan if the token's plan is missing for any reason.
+    const replayPerks = useMemo<IntroStep[]>(() => {
+        const tokenPlan = subscriptionToken
+            ? plans.find((p) => p.slug === subscriptionToken.plan_slug)
+            : null;
+
+        if (tokenPlan?.tour_perks?.length) return tokenPlan.tour_perks;
+
+        const current = plans.find((p) => p.slug === currentPlan);
+        return current?.tour_perks ?? [];
+    }, [plans, currentPlan, subscriptionToken]);
+
+    const canReplayTour = Boolean(subscriptionToken && replayPerks.length > 0);
 
     const subscribe = (plan: Plan) => {
         if (plan.slug === 'starter') return;
@@ -171,6 +200,9 @@ export default function Billing({
                         plan={currentPlanData}
                         onCancel={cancel}
                         onResume={resume}
+                        onReplayTour={
+                            canReplayTour ? () => setTourOpen(true) : undefined
+                        }
                         processing={processing}
                     />
                 )}
@@ -335,6 +367,21 @@ export default function Billing({
                     })}
                 </div>
             </div>
+
+            {/* Replay tour — mounted at the page level so the modal can open
+                regardless of which section triggered it. */}
+            {canReplayTour && subscriptionToken && (
+                <IntroDisclosure
+                    open={tourOpen}
+                    setOpen={setTourOpen}
+                    steps={replayPerks}
+                    featureId={`subscription-tour-${subscriptionToken.token}`}
+                    onComplete={() => {
+                        // Replays are read-only — closing the modal is enough.
+                        setTourOpen(false);
+                    }}
+                />
+            )}
         </>
     );
 }

@@ -8,14 +8,30 @@ type Props = {
     variant?: AppVariant;
 };
 
+type SharedProps = {
+    sidebarOpen: boolean;
+};
+
+/**
+ * Wraps authenticated pages in the sidebar provider (or a plain flex column
+ * for header-variant layouts). Reads the initial open state from the shared
+ * `sidebarOpen` prop, which is derived from the `sidebar_state` cookie
+ * server-side — so the sidebar doesn't flash open/closed on first paint.
+ */
 export function AppShell({ children, variant = 'sidebar' }: Props) {
-    const isOpen = usePage().props.sidebarOpen;
+    const { sidebarOpen } = usePage<SharedProps>().props;
 
     if (variant === 'header') {
         return (
-            <div className="flex min-h-screen w-full flex-col">{children}</div>
+            <div className="flex min-h-screen w-full flex-col">
+                {children}
+            </div>
         );
     }
 
-    return <SidebarProvider defaultOpen={isOpen}>{children}</SidebarProvider>;
+    return (
+        <SidebarProvider defaultOpen={sidebarOpen}>
+            {children}
+        </SidebarProvider>
+    );
 }

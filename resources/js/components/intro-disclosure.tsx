@@ -26,7 +26,7 @@ export type IntroStep = {
 };
 
 const ICONS: Record<string, LucideIcon> = {
-    
+
     sparkles: Sparkles,
     coins: Coins,
     mail: Mail,
@@ -106,7 +106,7 @@ export function IntroDisclosure({
                     <button
                         type="button"
                         onClick={() => close(false)}
-                        className="absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted"
+                        className="absolute right-3 top-3  rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted"
                         aria-label="Close tour"
                     >
                         <X className="size-4" />

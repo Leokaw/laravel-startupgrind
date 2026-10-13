@@ -13,16 +13,21 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+              // Set by OnboardingController when the user finishes or skips
+            // the onboarding modal. Null = still needs onboarding.
+            $table->timestamp('onboarded_at')->nullable();
             $table->string('profile_photo_path')->nullable();
             $table->string('password');
             $table->string('user_type');
+            
             $table->rememberToken();
             $table->timestamps();
 
-            // 👇 new
+        
+
+
             $table->text('description')->nullable();
-            // Matches App\Support\ServiceCategory::values() — one of those
-            // keys, or null if the user hasn't picked yet.
+
             $table->string('area_of_work')->nullable();
         });
 

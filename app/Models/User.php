@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Observers\UserObserver;
 use App\Support\ServiceCategory;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Laravel\Cashier\Billable;
 
 #[ObservedBy([UserObserver::class])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable, HasUuids, Billable;
 
@@ -43,7 +44,9 @@ class User extends Authenticatable
         'user_type',
         'company_id',
         'profile_photo_path',
+            'onboarded_at',
         'email_verified_at',
+        'onboarded_at',
         'approved_at',
         'description',
         'area_of_work',
@@ -53,6 +56,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'onboarded_at'      => 'datetime',
             'approved_at'       => 'datetime',
             'password'          => 'hashed',
         ];
@@ -160,6 +164,10 @@ class User extends Authenticatable
         return $this->user_type === self::TYPE_COMPANY;
     }
 
+    public function needsOnboarding(): bool
+    {
+        return $this->onboarded_at === null;
+    }
     public function isFreelancer(): bool
     {
         return $this->user_type === self::TYPE_FREELANCER;

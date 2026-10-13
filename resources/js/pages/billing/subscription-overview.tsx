@@ -4,6 +4,8 @@ import {
     CalendarCheck,
     CalendarClock,
     CreditCard,
+    RotateCcw,
+    X,
     Gift,
     Hourglass,
     Sparkles,
@@ -41,6 +43,7 @@ type Props = {
     plan: Plan | undefined;
     onCancel: () => void;
     onResume: () => void;
+    onReplayTour?: () => void;
     processing?: boolean;
 };
 
@@ -91,6 +94,7 @@ export function SubscriptionOverview({
     plan,
     onCancel,
     onResume,
+    onReplayTour,
     processing = false,
 }: Props) {
     const isEnding = subscription.on_grace_period;
@@ -100,15 +104,15 @@ export function SubscriptionOverview({
     const upcomingLabel = isEnding
         ? 'Access ends'
         : subscription.on_trial
-          ? 'First charge'
-          : 'Next renewal';
+            ? 'First charge'
+            : 'Next renewal';
 
     const progress =
         subscription.current_period_start && subscription.current_period_end
             ? cycleProgress(
-                  subscription.current_period_start,
-                  subscription.current_period_end,
-              )
+                subscription.current_period_start,
+                subscription.current_period_end,
+            )
             : 0;
 
     const trialInProgress = subscription.on_trial;
@@ -150,15 +154,15 @@ export function SubscriptionOverview({
                         isEnding
                             ? 'border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400'
                             : subscription.on_trial
-                              ? 'border-blue-500/30 bg-blue-500/15 text-blue-700 dark:text-blue-400'
-                              : 'border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+                                ? 'border-blue-500/30 bg-blue-500/15 text-blue-700 dark:text-blue-400'
+                                : 'border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
                     )}
                 >
                     {isEnding
                         ? 'Cancelling'
                         : subscription.on_trial
-                          ? 'On trial'
-                          : 'Active'}
+                            ? 'On trial'
+                            : 'Active'}
                 </Badge>
             </div>
 
@@ -324,10 +328,26 @@ export function SubscriptionOverview({
                 {/* Perks */}
                 {plan && plan.features.length > 0 && (
                     <div>
-                        <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                            <Sparkles className="size-3.5" />
-                            What's included
+                        <div className="mb-3 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                <Sparkles className="size-3.5" />
+                                What's included
+                            </div>
+
+                            {onReplayTour && (
+                                <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={onReplayTour}
+                                    disabled={processing}
+                                    className="  text-xs h-6 px-2 py-0.5"
+                                >
+                                    <RotateCcw className="size-3" />
+                                    Replay tour
+                                </Button>
+                            )}
                         </div>
+
                         <ul className="grid gap-2 sm:grid-cols-2">
                             {plan.features.map((feature) => (
                                 <li
@@ -348,10 +368,10 @@ export function SubscriptionOverview({
                         {isEnding
                             ? "You'll keep access until the date above. After that, you'll drop to the Free tier."
                             : subscription.pending_plan
-                              ? subscription.current_period_end
-                                  ? `Your plan switches to ${subscription.pending_plan.name} on ${formatDate(subscription.current_period_end)}.`
-                                  : `Your plan will switch to ${subscription.pending_plan.name} at your next billing cycle.`
-                              : 'Your subscription renews automatically on the card you used to subscribe.'}
+                                ? subscription.current_period_end
+                                    ? `Your plan switches to ${subscription.pending_plan.name} on ${formatDate(subscription.current_period_end)}.`
+                                    : `Your plan will switch to ${subscription.pending_plan.name} at your next billing cycle.`
+                                : 'Your subscription renews automatically on the card you used to subscribe.'}
                     </p>
 
                     {isEnding ? (
@@ -364,13 +384,17 @@ export function SubscriptionOverview({
                             Resume subscription
                         </Button>
                     ) : (
+                        
                         <Button
+                      
                             size="sm"
                             variant="destructive"
                             onClick={onCancel}
                             disabled={processing}
                         >
+                              <X className="size-3" />
                             Cancel subscription
+                          
                         </Button>
                     )}
                 </div>

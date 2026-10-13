@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SubscriptionSuccessToken;
 use App\Services\StripePlanResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,17 @@ class BillingController extends Controller
             ? Carbon::parse($activeSubscription->trial_started_at)->toIso8601String()
             : null;
 
+        // Latest usable success token for this user — drives the "Replay tour"
+        // button in SubscriptionOverview. Only `ready` or `completed` tokens
+        // count; `pending` ones haven't been confirmed by Stripe yet, and
+        // expired ones can't be replayed.
+        $subscriptionToken = SubscriptionSuccessToken::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['ready', 'completed'])
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->latest()
+            ->first();
+
         return Inertia::render('billing/index', [
             'plans' => $plans,
 
@@ -63,23 +75,23 @@ class BillingController extends Controller
                 'canceled'             => $activeSubscription->canceled(),
             ] : null,
 
+            'subscriptionToken' => $subscriptionToken ? [
+                'token'     => $subscriptionToken->token,
+                'status'    => $subscriptionToken->status,
+                'plan_slug' => $subscriptionToken->plan_slug,
+            ] : null,
+
             'flash' => [
                 'success'  => session('success'),
                 'error'    => session('error'),
                 'checkout' => $request->query('checkout'),
-                'toast'    => session('toast'), // ← picked up by useFlashToast
+                'toast'    => session('toast'),
             ],
         ]);
     }
 
     /**
      * Start a new subscription, or schedule a switch for an existing one.
-     *
-     * Two behaviours:
-     *   - No active sub  → redirect to Stripe Checkout.
-     *   - Active sub      → set `pending_stripe_price`. The listener
-     *                       `ApplySubscriptionFromWebhook::onInvoicePaid`
-     *                       performs the swap on the next renewal.
      */
     public function subscribe(Request $request, StripePlanResolver $resolver): RedirectResponse|Checkout
     {
