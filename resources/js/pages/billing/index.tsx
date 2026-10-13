@@ -51,6 +51,10 @@ const ICONS: Record<Plan['icon'], LucideIcon> = {
     building: Building2,
 };
 
+const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 export default function Billing({
     plans,
     currentPlan,
@@ -61,6 +65,8 @@ export default function Billing({
         if (plan.slug === 'starter') return;
         if (plan.slug === currentPlan) return;
 
+        scrollToTop();
+
         router.post(
             '/billing/subscribe',
             { plan: plan.slug },
@@ -69,10 +75,12 @@ export default function Billing({
     };
 
     const cancel = () => {
+        scrollToTop();
         router.post('/billing/cancel', {}, { preserveScroll: true });
     };
 
     const resume = () => {
+        scrollToTop();
         router.post('/billing/resume', {}, { preserveScroll: true });
     };
 
@@ -130,17 +138,10 @@ export default function Billing({
                         const isPro = plan.slug === 'pro';
                         const isFree = plan.slug === 'starter';
 
-                        // True when the user is on a paid plan and looking at
-                        // a different one — the button acts as a "switch",
-                        // so we make it primary regardless of which plan it is.
                         const isSwitching = Boolean(
                             currentPlan && currentPlan !== 'starter',
                         );
 
-                        // Whether the action button should render with the
-                        // primary-colored treatment. This is the condition
-                        // that used to gate `variant="default"` — the beam
-                        // button takes over from here.
                         const isPrimary = isSwitching || isPro;
 
                         return (
@@ -191,7 +192,6 @@ export default function Billing({
                                     </div>
                                     <div className="text-sm leading-snug">
                                         <p className="font-medium">Per month</p>
-                                       
                                     </div>
                                 </div>
 
@@ -219,9 +219,6 @@ export default function Billing({
                                             : 'Cancel subscription'}
                                     </Button>
                                 ) : isPrimary ? (
-                                    /* Primary action (Pro, or any plan while
-                                       switching) — gets the animated beam
-                                       around the pill. */
                                     <BorderBeamButton
                                         type="button"
                                         variant="secondary"
@@ -236,9 +233,6 @@ export default function Billing({
                                             : 'Get started'}
                                     </BorderBeamButton>
                                 ) : (
-                                    /* Secondary action (Enterprise when the
-                                       user isn't switching) — plain outline,
-                                       no beam, preserves the visual hierarchy. */
                                     <Button
                                         variant="outline"
                                         className="mt-8 h-12 w-full rounded-full text-base"

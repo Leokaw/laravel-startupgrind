@@ -1,4 +1,5 @@
 <?php
+
 return [
     'currency' => 'HUF',
 
@@ -13,37 +14,63 @@ return [
             'badge'                => null,
             'membership_tier'      => 'free',
             'signup_bonus_credits' => 0,
-            'seat_limit'           => 1,
-            'free_messages_limit'  => 0,
-            'company_employee_view_limit' => 0,
             'features' => [
                 'Unlimited projects',
                 'Saved searches & alerts',
                 'Seamless integrations',
-                'Community support',
+                'Community support (48h response)',
+            ],
+            'limits' => [
+                'seat_limit'                  => 1,
+                'free_messages_per_month'     => 5,
+                'company_employee_view_limit' => 2,
+                'profile_boost_per_month'     => 0,
+                'event_discount_percent'      => 0,
+                'support_response_hours'      => 48,
+            ],
+            'flags' => [
+                'custom_profile_url' => false,
+                'advanced_search'    => false,
+                'profile_boost'      => false,
+                'event_discount'     => false,
             ],
             'tour_perks' => [],
         ],
 
         'pro' => [
             'name'                 => 'Pro',
-            'description'          => 'For founders, operators, and investors who want more credits, more reach, and priority support.',
+            'description'          => 'For founders, operators, and investors who want more reach, more visibility, and priority support.',
             'price'                => 9900,
             'lookup_key'           => 'pro_monthly',
             'icon'                 => 'zap',
             'badge'                => 'Most Popular',
             'membership_tier'      => 'pro',
             'signup_bonus_credits' => 500,
-            'seat_limit'           => 1,
-            'free_messages_limit'  => 5,
-            'company_employee_view_limit' => 5,
             'features' => [
                 'Everything in Starter',
                 '+500 signup credits & monthly refresh',
-                '5 free messages per month',
+                '10 free messages per month',
                 'See up to 5 employees per company',
+                'Monthly profile boost (3×/month)',
+                '15% off paid event tickets',
+                'Custom profile URL',
+                'Advanced search filters',
                 'Verified Pro badge',
                 'Priority support (24h response)',
+            ],
+            'limits' => [
+                'seat_limit'                  => 1,
+                'free_messages_per_month'     => 10,
+                'company_employee_view_limit' => 5,
+                'profile_boost_per_month'     => 3,
+                'event_discount_percent'      => 15,
+                'support_response_hours'      => 24,
+            ],
+            'flags' => [
+                'custom_profile_url' => true,
+                'advanced_search'    => true,
+                'profile_boost'      => true,
+                'event_discount'     => true,
             ],
             'tour_perks' => [
                 [
@@ -59,9 +86,9 @@ return [
                     'icon'              => 'coins',
                 ],
                 [
-                    'title'             => '5 free messages per month',
+                    'title'             => '10 free messages per month',
                     'short_description' => 'Start conversations without spending credits',
-                    'full_description'  => 'Message any user up to 5 times per month for free. Counter resets with your monthly credit refresh.',
+                    'full_description'  => 'Message any user up to 10 times per month for free. Counter resets with your monthly credit refresh.',
                     'icon'              => 'message',
                 ],
                 [
@@ -71,16 +98,28 @@ return [
                     'icon'              => 'users',
                 ],
                 [
-                    'title'             => 'Verified Pro badge',
-                    'short_description' => 'Stand out in the community',
-                    'full_description'  => 'Your profile now shows a verified Pro badge everywhere your name appears.',
-                    'icon'              => 'badge',
+                    'title'             => 'Monthly profile boost',
+                    'short_description' => 'Appear higher in search 3× per month',
+                    'full_description'  => 'Boost your profile to the top of search results and listings 3 times per month.',
+                    'icon'              => 'arrow-up',
                 ],
                 [
-                    'title'             => 'Priority support',
-                    'short_description' => '24-hour response guarantee',
-                    'full_description'  => 'Your support tickets jump to the front of the queue with a 24-hour response guarantee.',
-                    'icon'              => 'headset',
+                    'title'             => '15% off paid event tickets',
+                    'short_description' => 'Save on conference & chapter events',
+                    'full_description'  => 'Get 15% off any paid event ticket purchased through the platform.',
+                    'icon'              => 'ticket',
+                ],
+                [
+                    'title'             => 'Custom profile URL',
+                    'short_description' => 'Claim yourname.startupgrind.com',
+                    'full_description'  => 'Replace your default ID with a clean custom URL you can share anywhere.',
+                    'icon'              => 'link',
+                ],
+                [
+                    'title'             => 'Verified Pro badge & priority support',
+                    'short_description' => 'Stand out, get help faster',
+                    'full_description'  => 'Your profile shows a verified Pro badge, and your support tickets get a 24-hour response guarantee.',
+                    'icon'              => 'badge',
                 ],
             ],
         ],
@@ -94,14 +133,30 @@ return [
             'badge'                => 'Best for teams',
             'membership_tier'      => 'enterprise',
             'signup_bonus_credits' => 2000,
-            'seat_limit'           => 5,
-            'free_messages_limit'  => 5,
-            'company_employee_view_limit' => 5,
             'features' => [
                 'Everything in Pro, for 5 seats',
                 '+2,000 signup credits',
+                '20 free messages per month (per seat)',
+                'See every employee per company',
+                'Monthly profile boost (10×/month)',
+                '20% off paid event tickets',
                 'One bill, one workspace',
                 'Dedicated success manager',
+                'Priority support (4h response)',
+            ],
+            'limits' => [
+                'seat_limit'                  => 5,
+                'free_messages_per_month'     => 20,
+                'company_employee_view_limit' => -1, // unlimited
+                'profile_boost_per_month'     => 10,
+                'event_discount_percent'      => 20,
+                'support_response_hours'      => 4,
+            ],
+            'flags' => [
+                'custom_profile_url' => true,
+                'advanced_search'    => true,
+                'profile_boost'      => true,
+                'event_discount'     => true,
             ],
             'tour_perks' => [
                 [
@@ -119,7 +174,7 @@ return [
                 [
                     'title'             => '5 seats included',
                     'short_description' => 'Invite your team',
-                    'full_description'  => 'Invite up to 5 people to your plan by email. Each seat gets full Pro benefits.',
+                    'full_description'  => 'Invite up to 5 people by email. Each seat gets full Pro benefits.',
                     'icon'              => 'users',
                 ],
                 [
