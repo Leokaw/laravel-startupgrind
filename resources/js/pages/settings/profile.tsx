@@ -114,7 +114,7 @@ export default function Profile({
                                 />
                             </div>
 
-                            {/* ========== Area of work ========== */}
+                            {/* ========== Area of work ========== */} 
                             <div className="grid gap-2">
                                 <Label htmlFor="area_of_work">
                                     Area of work

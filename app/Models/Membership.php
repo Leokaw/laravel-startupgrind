@@ -117,7 +117,7 @@ class Membership extends Model
         return $this->tier === MembershipTier::FREE;
     }
 
-  
+
 
     public function isPro(): bool
     {
@@ -324,5 +324,31 @@ class Membership extends Model
     public function scopeCanceled(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_CANCELED);
+    }
+
+
+    public function planConfig(): array
+    {
+        return config('plans.plans.' . $this->tier->value, []);
+    }
+
+    public function featureLimit(string $key): int
+    {
+        return (int) ($this->planConfig()[$key] ?? 0);
+    }
+
+    public function canSeeCompanyEmployees(): int
+    {
+        return $this->featureLimit('company_employee_view_limit');
+    }
+
+    public function freeMessagesRemaining(): int
+    {
+        return max(0, $this->featureLimit('free_messages_limit') - $this->free_messages_used);
+    }
+
+    public function hasProBadge(): bool
+    {
+        return $this->isAtLeast(MembershipTier::PRO) && $this->isActive();
     }
 }

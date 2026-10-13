@@ -191,9 +191,7 @@ export default function Billing({
                                     </div>
                                     <div className="text-sm leading-snug">
                                         <p className="font-medium">Per month</p>
-                                        <p className="text-muted-foreground">
-                                            Plus local taxes
-                                        </p>
+                                       
                                     </div>
                                 </div>
 

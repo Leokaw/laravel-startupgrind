@@ -98,12 +98,12 @@ export function NavMain() {
                     <SidebarMenuButton
                         asChild
                         isActive={isCurrentUrl('/services/company/create')}
-                        tooltip={{ children: 'Create company service' }}
+                        tooltip={{ children: 'Create service' }}
                         className={cn(activeClasses, itemMotion)}
                     >
                         <Link href="/services/company/create" prefetch>
                             <Building2 className="mr-2 h-4 w-4" />
-                            <span>Create company service</span>
+                            <span>Create service</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
