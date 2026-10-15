@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     ArrowRight,
     CheckCircle2,
@@ -7,6 +7,7 @@ import {
     RotateCcw,
     Sparkles,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { BorderBeamButton } from '@/components/ui/border-beam-button';
 import {
     IntroDisclosure,
@@ -38,6 +39,9 @@ export default function BillingSuccess({
     const [tourFinished, setTourFinished] = useState(
         initialStatus === 'completed',
     );
+
+    // Prevent the "ready" toast from firing more than once per mount.
+    const readyToastShown = useRef(initialStatus !== 'pending');
 
     // ----------------------------------------------------------------
     // Poll the success-token endpoint until the webhook flips it
@@ -76,6 +80,19 @@ export default function BillingSuccess({
     }, [status, token]);
 
     // ----------------------------------------------------------------
+    // Fire a one-time success toast when the token flips to ready.
+    // ----------------------------------------------------------------
+    useEffect(() => {
+        if (status === 'pending') return;
+        if (readyToastShown.current) return;
+
+        readyToastShown.current = true;
+        toast.success(`You're on ${plan.name}!`, {
+            description: 'Your perks are active. Enjoy the tour.',
+        });
+    }, [status, plan.name]);
+
+    // ----------------------------------------------------------------
     // Auto-open the tour once the webhook has confirmed payment.
     // ----------------------------------------------------------------
     useEffect(() => {
@@ -87,7 +104,6 @@ export default function BillingSuccess({
 
     // ----------------------------------------------------------------
     // Called exactly once, when the tour closes the first time.
-    // After that, `tourFinished` is true and this becomes a no-op.
     // ----------------------------------------------------------------
     const handleTourFinish = async () => {
         setTourFinished(true);
@@ -106,9 +122,6 @@ export default function BillingSuccess({
         }
     };
 
-    // ----------------------------------------------------------------
-    // Replay handler — reopens the tour without touching the token.
-    // ----------------------------------------------------------------
     const handleReplayTour = () => {
         setTourOpen(true);
     };
@@ -126,7 +139,7 @@ export default function BillingSuccess({
                             Finalizing your subscription…
                         </h1>
                         <p className="max-w-md text-muted-foreground">
-                            We’re waiting for Stripe to confirm your payment.
+                            We're waiting for Stripe to confirm your payment.
                             This usually takes just a few seconds — please keep
                             this page open.
                         </p>
@@ -138,10 +151,10 @@ export default function BillingSuccess({
                     <>
                         <CheckCircle2 className="size-12 text-emerald-500" />
                         <h1 className="text-2xl font-semibold">
-                            You’re on {plan.name}!
+                            You're on {plan.name}!
                         </h1>
                         <p className="max-w-md text-muted-foreground">
-                            Your subscription is active. Let’s take a quick
+                            Your subscription is active. Let's take a quick
                             tour of your new perks.
                         </p>
                         <button
@@ -162,7 +175,7 @@ export default function BillingSuccess({
                             <Sparkles className="size-8 text-primary" />
                         </div>
                         <h1 className="text-3xl font-semibold tracking-tight">
-                            You’re all set!
+                            You're all set!
                         </h1>
                         <p className="max-w-md text-muted-foreground">
                             Your {plan.name} perks are live. Jump back into the
@@ -186,7 +199,6 @@ export default function BillingSuccess({
                                 />
                             </BorderBeamButton>
 
-                            {/* 👇 Replay the tour without losing the "all set" state */}
                             <button
                                 type="button"
                                 onClick={handleReplayTour}
@@ -205,10 +217,6 @@ export default function BillingSuccess({
                 setOpen={(open) => {
                     setTourOpen(open);
 
-                    // First close of the tour completes the flow and marks
-                    // the token. Subsequent replays just toggle the modal —
-                    // the `!tourFinished` guard ensures we don't re-POST to
-                    // the complete endpoint.
                     if (!open && !tourFinished) {
                         handleTourFinish();
                     }

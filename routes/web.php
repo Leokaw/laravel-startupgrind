@@ -43,6 +43,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/discounted', [DiscountTicketController::class, 'store'])
         ->name('tickets.discounted.store');
 
+
+        
     // Invite tickets
     Route::get('/tickets/invite/create', [InviteTicketController::class, 'create'])
         ->name('tickets.invite.create');
@@ -135,6 +137,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/billing/success/{token}/complete', [SubscriptionSuccessController::class, 'complete'])
         ->name('billing.success.complete');
+
+        Route::get('/billing', BillingController::class)->name('billing.index');
+
+    Route::post('/billing/subscribe', [BillingController::class, 'subscribe'])
+        ->name('billing.subscribe');
+
+    Route::post('/billing/cancel', [BillingController::class, 'cancel'])
+        ->name('billing.cancel');
+
+    Route::post('/billing/resume', [BillingController::class, 'resume'])
+        ->name('billing.resume');
 
 
     Route::get('/events', UpcomingEventsController::class)

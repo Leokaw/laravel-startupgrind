@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     AlertTriangle,
     Building2,
@@ -9,6 +10,7 @@ import {
     Zap,
     type LucideIcon,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
     Alert,
     AlertDescription,
@@ -34,14 +36,20 @@ type Plan = {
     features: string[];
 };
 
+type FlashToast = {
+    type: 'success' | 'error' | 'info' | 'warning';
+    message: string;
+};
+
 type Props = {
     plans: Plan[];
     currentPlan: string | null;
-    subscription: Subscription;
+    subscription: Subscription | null;
     flash: {
         success: string | null;
         error: string | null;
         checkout: 'success' | 'cancelled' | null;
+        toast: FlashToast | null;
     };
 };
 
@@ -51,29 +59,102 @@ const ICONS: Record<Plan['icon'], LucideIcon> = {
     building: Building2,
 };
 
+const TOAST_ID = 'billing-action';
+
+const scrollToTop = () => {
+    const prefersReduced = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+    ).matches;
+
+    window.scrollTo({
+        top: 0,
+        behavior: prefersReduced ? 'auto' : 'smooth',
+    });
+};
+
 export default function Billing({
     plans,
     currentPlan,
     subscription,
     flash,
 }: Props) {
+    const [processing, setProcessing] = useState(false);
+
     const subscribe = (plan: Plan) => {
         if (plan.slug === 'starter') return;
         if (plan.slug === currentPlan) return;
+        if (processing) return;
+
+        setProcessing(true);
+        toast.loading('Updating your plan…', { id: TOAST_ID });
+        scrollToTop();
 
         router.post(
             '/billing/subscribe',
             { plan: plan.slug },
-            { preserveScroll: true },
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setProcessing(false);
+                    toast.dismiss(TOAST_ID);
+                },
+                onError: () => {
+                    toast.error('Could not update plan. Please try again.', {
+                        id: TOAST_ID,
+                    });
+                },
+            },
         );
     };
 
     const cancel = () => {
-        router.post('/billing/cancel', {}, { preserveScroll: true });
+        if (processing) return;
+
+        setProcessing(true);
+        toast.loading('Cancelling subscription…', { id: TOAST_ID });
+        scrollToTop();
+
+        router.post(
+            '/billing/cancel',
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setProcessing(false);
+                    toast.dismiss(TOAST_ID);
+                },
+                onError: () => {
+                    toast.error('Could not cancel. Please try again.', {
+                        id: TOAST_ID,
+                    });
+                },
+            },
+        );
     };
 
     const resume = () => {
-        router.post('/billing/resume', {}, { preserveScroll: true });
+        if (processing) return;
+
+        setProcessing(true);
+        toast.loading('Resuming subscription…', { id: TOAST_ID });
+        scrollToTop();
+
+        router.post(
+            '/billing/resume',
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setProcessing(false);
+                    toast.dismiss(TOAST_ID);
+                },
+                onError: () => {
+                    toast.error('Could not resume. Please try again.', {
+                        id: TOAST_ID,
+                    });
+                },
+            },
+        );
     };
 
     const currentPlanData = plans.find((p) => p.slug === currentPlan);
@@ -90,6 +171,7 @@ export default function Billing({
                         plan={currentPlanData}
                         onCancel={cancel}
                         onResume={resume}
+                        processing={processing}
                     />
                 )}
 
@@ -130,17 +212,10 @@ export default function Billing({
                         const isPro = plan.slug === 'pro';
                         const isFree = plan.slug === 'starter';
 
-                        // True when the user is on a paid plan and looking at
-                        // a different one — the button acts as a "switch",
-                        // so we make it primary regardless of which plan it is.
                         const isSwitching = Boolean(
                             currentPlan && currentPlan !== 'starter',
                         );
 
-                        // Whether the action button should render with the
-                        // primary-colored treatment. This is the condition
-                        // that used to gate `variant="default"` — the beam
-                        // button takes over from here.
                         const isPrimary = isSwitching || isPro;
 
                         return (
@@ -191,7 +266,6 @@ export default function Billing({
                                     </div>
                                     <div className="text-sm leading-snug">
                                         <p className="font-medium">Per month</p>
-                                       
                                     </div>
                                 </div>
 
@@ -211,6 +285,7 @@ export default function Billing({
                                         className="mt-8 h-12 w-full rounded-full text-base"
                                         onClick={cancel}
                                         disabled={
+                                            processing ||
                                             subscription?.on_grace_period
                                         }
                                     >
@@ -219,9 +294,6 @@ export default function Billing({
                                             : 'Cancel subscription'}
                                     </Button>
                                 ) : isPrimary ? (
-                                    /* Primary action (Pro, or any plan while
-                                       switching) — gets the animated beam
-                                       around the pill. */
                                     <BorderBeamButton
                                         type="button"
                                         variant="secondary"
@@ -230,19 +302,18 @@ export default function Billing({
                                         borderBeamClassName="mt-8 w-full!"
                                         className="h-12 w-full gap-2 rounded-full text-base font-semibold"
                                         onClick={() => subscribe(plan)}
+                                        disabled={processing}
                                     >
                                         {isSwitching
                                             ? 'Switch to this plan'
                                             : 'Get started'}
                                     </BorderBeamButton>
                                 ) : (
-                                    /* Secondary action (Enterprise when the
-                                       user isn't switching) — plain outline,
-                                       no beam, preserves the visual hierarchy. */
                                     <Button
                                         variant="outline"
                                         className="mt-8 h-12 w-full rounded-full text-base"
                                         onClick={() => subscribe(plan)}
+                                        disabled={processing}
                                     >
                                         Get started
                                     </Button>

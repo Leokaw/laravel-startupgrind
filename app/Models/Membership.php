@@ -327,28 +327,33 @@ class Membership extends Model
     }
 
 
-    public function planConfig(): array
+    public function limit(string $key, int $default = 0): int
     {
-        return config('plans.plans.' . $this->tier->value, []);
+        return (int) config("subscriptions.plans.{$this->tier->value}.limits.$key", $default);
     }
 
-    public function featureLimit(string $key): int
+    public function flag(string $key): bool
     {
-        return (int) ($this->planConfig()[$key] ?? 0);
+        return (bool) config("subscriptions.plans.{$this->tier->value}.flags.$key", false);
     }
 
-    public function canSeeCompanyEmployees(): int
+    public function isUnlimited(string $key): bool
     {
-        return $this->featureLimit('company_employee_view_limit');
+        return $this->limit($key) === -1;
     }
 
     public function freeMessagesRemaining(): int
     {
-        return max(0, $this->featureLimit('free_messages_limit') - $this->free_messages_used);
+        return max(0, $this->limit('free_messages_per_month') - $this->free_messages_used);
     }
 
-    public function hasProBadge(): bool
+    public function canSeeCompanyEmployees(): int
     {
-        return $this->isAtLeast(MembershipTier::PRO) && $this->isActive();
+        return $this->limit('company_employee_view_limit'); // -1 = unlimited
+    }
+
+    public function supportResponseHours(): int
+    {
+        return $this->limit('support_response_hours', 72);
     }
 }
