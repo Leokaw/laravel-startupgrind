@@ -103,26 +103,40 @@ function StepIndicator() {
 }
 
 /* -----------------------------------------------------------------
- |  Step — full-height grid, media left, content right (scrollable)
+ |  Step
  |
- |  Both columns remount when the step changes because `Step` returns
- |  null for inactive steps. The new mount plays the entry animation
- |  exactly once. No `key` needed — the unmount/mount cycle handles it.
+ |  variant="split"     → image left, content right (steps 2–6)
+ |  variant="centered"  → full-width, no image column (step 1)
  | ----------------------------------------------------------------- */
 
 type StepProps = {
     step: number;
     media?: ReactNode;
     children: ReactNode;
+    variant?: 'split' | 'centered';
 };
 
-function Step({ step, media, children }: StepProps) {
+function Step({ step, media, children, variant = 'split' }: StepProps) {
     const { step: current } = useOnboarding();
     if (current !== step) return null;
 
+    if (variant === 'centered') {
+        return (
+            <div
+                className={cn(
+                    'flex h-full min-h-0 flex-col gap-6 p-6 md:p-8',
+                    'animate-in fade-in slide-in-from-bottom-3',
+                    'duration-300 ease-out',
+                    'motion-reduce:animate-none',
+                )}
+            >
+                {children}
+            </div>
+        );
+    }
+
     return (
         <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-2">
-            {/* Left column — media, fades in gently */}
             <div className="relative hidden h-full overflow-hidden bg-muted/40 md:block">
                 <div
                     className={cn(
@@ -135,7 +149,6 @@ function Step({ step, media, children }: StepProps) {
                 </div>
             </div>
 
-            {/* Right column — scrollable content, slides up + fades */}
             <div className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain">
                 <div
                     className={cn(
@@ -175,6 +188,10 @@ function Header({
 
 /* -----------------------------------------------------------------
  |  Navigation
+ |
+ |  Two equal-width pill buttons, matching step 1's footer. Both
+ |  variants (step 1's local footer + this shared one for 2–6) now
+ |  look identical.
  | ----------------------------------------------------------------- */
 
 type NavigationProps = {
@@ -182,6 +199,7 @@ type NavigationProps = {
     nextLabel?: string;
     previousLabel?: string;
     onCompleteOverride?: () => void;
+    nextDisabled?: boolean;
 };
 
 function Navigation({
@@ -189,17 +207,18 @@ function Navigation({
     nextLabel = 'Next',
     previousLabel = 'Back',
     onCompleteOverride,
+    nextDisabled = false,
 }: NavigationProps) {
     const { isFirst, isLast, next, previous, complete } = useOnboarding();
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex gap-3">
             <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={previous}
                 disabled={isFirst}
-                className="gap-1.5"
+                className="h-11 flex-1 rounded-full text-sm"
             >
                 <ArrowLeft className="size-4" />
                 {previousLabel}
@@ -209,13 +228,18 @@ function Navigation({
                 <Button
                     type="button"
                     onClick={onCompleteOverride ?? complete}
-                    className="gap-1.5"
+                    className="h-11 flex-1 gap-2 rounded-full text-sm"
                 >
                     <Check className="size-4" />
                     {completeLabel}
                 </Button>
             ) : (
-                <Button type="button" onClick={next} className="gap-1.5">
+                <Button
+                    type="button"
+                    onClick={next}
+                    disabled={nextDisabled}
+                    className="h-11 flex-1 gap-2 rounded-full text-sm"
+                >
                     {nextLabel}
                     <ArrowRight className="size-4" />
                 </Button>

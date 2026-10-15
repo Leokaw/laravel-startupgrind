@@ -1,16 +1,29 @@
-import { router, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
-import { Check } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import {
     Header,
     Navigation,
     Onboarding,
     Step,
     StepIndicator,
+    useOnboarding,
 } from '@/components/ui/onboarding';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import {
+    FEATURES,
+    GOALS,
+    INDUSTRIES,
+    ROLES,
+    TIPS,
+    TOTAL_STEPS,
+    useOnboardingFlow,
+    type ChoiceGroupItem,
+    type Feature,
+} from '@/components/onboarding/use-onboarding-flow';
+import AppLogoIcon from './app-logo-icon';
 
 /* =================================================================
  |  Shared types
@@ -22,31 +35,62 @@ type OnboardingShared = {
 } | null;
 
 /* =================================================================
- |  Placeholder image
+ |  Atoms
  | ================================================================= */
 
+/**
+ * Step image used on the left column of split steps (2–6).
+ * Darkened slightly so it doesn't compete with the content on the
+ * right — a subtle brightness filter + gradient overlay.
+ */
 function StepImage({ src, alt }: { src: string; alt: string }) {
     return (
-        <img
-            src={src}
-            alt={alt}
-            className="h-full w-full object-cover"
-            draggable={false}
-            loading="lazy"
-        />
+        <div className="relative h-full w-full">
+            <img
+                src={src}
+                alt={alt}
+                className="h-full w-full object-cover brightness-[0.72]"
+                draggable={false}
+                loading="lazy"
+            />
+            {/* Soft vignette so the edges blend into the surface */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
+        </div>
+    );
+}
+
+function Dots({
+    count,
+    value,
+    onChange,
+}: {
+    count: number;
+    value: number;
+    onChange: (i: number) => void;
+}) {
+    return (
+        <div className="flex items-center justify-center gap-2 pt-1">
+            {Array.from({ length: count }).map((_, i) => (
+                <button
+                    key={i}
+                    type="button"
+                    aria-label={`Go to slide ${i + 1}`}
+                    onClick={() => onChange(i)}
+                    className={cn(
+                        'size-2 rounded-full transition-all duration-200',
+                        value === i
+                            ? 'bg-foreground'
+                            : 'bg-muted-foreground/30 hover:bg-muted-foreground/50',
+                    )}
+                />
+            ))}
+        </div>
     );
 }
 
 /* =================================================================
- |  Choice group — radio list
+ |  Choice group
  | ================================================================= */
-
-type ChoiceGroupItem = {
-    value: string;
-    label: string;
-    description?: string;
-    icon?: ReactNode;
-};
 
 type ChoiceGroupProps = {
     name: string;
@@ -129,14 +173,8 @@ function ChoiceGroup({
 }
 
 /* =================================================================
- |  Feature carousel — step 1 hero
+ |  Feature carousel (step 1)
  | ================================================================= */
-
-type Feature = {
-    title: string;
-    description: string;
-    image: string;
-};
 
 function FeatureCarousel({
     features,
@@ -148,8 +186,9 @@ function FeatureCarousel({
     onChange: (i: number) => void;
 }) {
     return (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="order-2 flex flex-col gap-3 md:order-1">
+        <div className="grid h-full min-h-0 grid-cols-1 items-stretch gap-5 md:grid-cols-2 md:gap-8">
+            {/* Left — feature list */}
+            <div className="order-2 flex flex-col justify-center gap-2.5 md:order-1">
                 {features.map((feature, i) => {
                     const isActive = value === i;
 
@@ -159,29 +198,35 @@ function FeatureCarousel({
                             type="button"
                             onClick={() => onChange(i)}
                             className={cn(
-                                'flex items-start gap-3 rounded-xl border p-4 text-left',
-                                'transition-all duration-200 ease-out',
+                                'flex items-start gap-3 rounded-xl border p-3 text-left transition-all duration-200 ease-out',
                                 isActive
-                                    ? 'border-primary/30 bg-primary/5'
-                                    : 'border-transparent hover:bg-muted/60',
+                                    ? 'border-border bg-muted/60 shadow-sm'
+                                    : 'border-transparent hover:bg-muted/40',
                             )}
                         >
                             <span
                                 className={cn(
-                                    'flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold transition-colors',
+                                    'mt-0.5 shrink-0 transition-colors',
                                     isActive
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-muted text-muted-foreground',
+                                        ? 'text-foreground'
+                                        : 'text-muted-foreground',
                                 )}
                             >
-                                {i + 1}
+                                {feature.icon}
                             </span>
                             <span className="flex-1">
-                                <span className="block text-sm font-medium">
+                                <span
+                                    className={cn(
+                                        'block text-sm font-semibold transition-colors',
+                                        isActive
+                                            ? 'text-foreground'
+                                            : 'text-muted-foreground',
+                                    )}
+                                >
                                     {feature.title}
                                 </span>
                                 {isActive && (
-                                    <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
+                                    <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground">
                                         {feature.description}
                                     </span>
                                 )}
@@ -191,8 +236,9 @@ function FeatureCarousel({
                 })}
             </div>
 
-            <div className="order-1 md:order-2">
-                <div className="relative aspect-[4/3] overflow-hidden rounded-xl border bg-muted">
+            {/* Right — preview image, fills the row */}
+            <div className="order-1 min-h-0 md:order-2">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border bg-muted shadow-sm md:aspect-auto md:h-full">
                     {features.map((feature, i) => (
                         <img
                             key={feature.title}
@@ -214,7 +260,7 @@ function FeatureCarousel({
 }
 
 /* =================================================================
- |  Tips list — step 6
+ |  Tips
  | ================================================================= */
 
 function TipsList({ items }: { items: string[] }) {
@@ -235,125 +281,127 @@ function TipsList({ items }: { items: string[] }) {
 }
 
 /* =================================================================
- |  Config
+ |  Step 1 — full-width carousel
  | ================================================================= */
 
-const FEATURES: Feature[] = [
-    {
-        title: 'Discover your people',
-        description:
-            'Search founders, investors, and operators by role, stage, industry, and city — then reach out directly.',
-        image: 'https://placehold.co/800x600/4f46e5/ffffff?text=Discover',
-    },
-    {
-        title: 'Warm intros, no cold DMs',
-        description:
-            'Send consent-based intro requests. If the other person accepts, contact details are shared — no exposed emails.',
-        image: 'https://placehold.co/800x600/7c3aed/ffffff?text=Warm+Intros',
-    },
-    {
-        title: 'Show up where it matters',
-        description:
-            'RSVP to chapter events and the global conference. See who else is attending before you walk in.',
-        image: 'https://placehold.co/800x600/0891b2/ffffff?text=Events',
-    },
-];
+function StepOneCarousel({
+    featureIndex,
+    selectFeature,
+    allFeaturesVisited,
+}: {
+    featureIndex: number;
+    selectFeature: (i: number) => void;
+    allFeaturesVisited: boolean;
+}) {
+    const { next } = useOnboarding();
 
-const ROLES: ChoiceGroupItem[] = [
-    { value: 'founder', label: 'Founder', description: 'Building a company' },
-    { value: 'investor', label: 'Investor', description: 'Backing founders' },
-    { value: 'operator', label: 'Operator', description: 'Scaling teams' },
-    { value: 'freelancer', label: 'Freelancer', description: 'Available for hire' },
-    { value: 'designer', label: 'Designer', description: 'Design & brand' },
-    { value: 'developer', label: 'Developer', description: 'Building product' },
-];
+    return (
+        <Step step={1} variant="centered">
+            <div className="space-y-3 text-center">
+                <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10">
+                    <AppLogoIcon className="size-8 fill-current text-primary" />
+                </div>
+                <p className="text-base text-muted-foreground md:text-lg">
+                    Here's a quick look at what you can do.
+                </p>
+                <Dots
+                    count={FEATURES.length}
+                    value={featureIndex}
+                    onChange={selectFeature}
+                />
+            </div>
 
-const GOALS: ChoiceGroupItem[] = [
-    { value: 'raise', label: 'Raise funds' },
-    { value: 'cofounder', label: 'Find a co-founder' },
-    { value: 'hire', label: 'Hire talent' },
-    { value: 'network', label: 'Grow my network' },
-    { value: 'learn', label: 'Learn from others' },
-    { value: 'events', label: 'Find events' },
-];
+            <div className="flex-1">
+                <FeatureCarousel
+                    features={FEATURES}
+                    value={featureIndex}
+                    onChange={selectFeature}
+                />
+            </div>
 
-const INDUSTRIES: ChoiceGroupItem[] = [
-    { value: 'fintech', label: 'Fintech' },
-    { value: 'healthtech', label: 'Healthtech' },
-    { value: 'ai', label: 'AI & ML' },
-    { value: 'saas', label: 'SaaS' },
-    { value: 'consumer', label: 'Consumer' },
-    { value: 'climate', label: 'Climate' },
-    { value: 'marketplace', label: 'Marketplace' },
-    { value: 'hardware', label: 'Hardware' },
-];
+            <div className="flex flex-col gap-2 pt-2">
+                {!allFeaturesVisited && (
+                    <p className="text-center text-xs text-muted-foreground">
+                        Explore all {FEATURES.length} to continue
+                    </p>
+                )}
 
-const TIPS: string[] = [
-    'Complete your profile — a short description and a photo go a long way.',
-    'Use saved searches to get notified when someone matching your filters joins.',
-    'RSVP early to popular chapter events. Spots fill up fast.',
-    'Warm intros take a couple of days. Plan ahead before big conferences.',
-];
+                <div className="flex gap-3">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled
+                        className="h-11 flex-1 rounded-full text-sm"
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        type="button"
+                        onClick={next}
+                        disabled={!allFeaturesVisited}
+                        className="h-11 flex-1 gap-2 rounded-full text-sm"
+                    >
+                        Next
+                        <ArrowRight className="size-4" />
+                    </Button>
+                </div>
+            </div>
+        </Step>
+    );
+}
 
 /* =================================================================
- |  Steps
+ |  Steps 2–6 + footer
  | ================================================================= */
 
 type StepsProps = {
-    categories: Record<string, string>;
-    onSubmit: (payload: {
-        area_of_work: string | null;
-        description: string | null;
-    }) => void;
-    onSkip: () => void;
-    submitting: boolean;
+    flow: ReturnType<typeof useOnboardingFlow>;
 };
 
-function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
-    const [featureIndex, setFeatureIndex] = useState(0);
-    const [role, setRole] = useState<string | null>(null);
-    const [goal, setGoal] = useState<string | null>(null);
-    const [industry, setIndustry] = useState<string | null>(null);
-    const [description, setDescription] = useState('');
+function Steps({ flow }: StepsProps) {
+    const { step } = useOnboarding();
 
-    const resolvedAreaOfWork =
-        industry && categories[industry] !== undefined ? industry : null;
+    const canProceed = (() => {
+        switch (step) {
+            case 1:
+                return flow.allFeaturesVisited;
+            case 2:
+                return flow.role !== null;
+            case 3:
+                return flow.goal !== null;
+            case 4:
+                return flow.industry !== null;
+            case 5:
+                return flow.description.trim().length > 0;
+            case 6:
+            default:
+                return true;
+        }
+    })();
 
     return (
         <>
-            {/* Fixed top — step indicator */}
-            <div className="shrink-0 px-8 pt-6 md:px-10">
-                <StepIndicator />
-            </div>
+            {/* Step indicator (hidden on step 1) */}
+            {step !== 1 && (
+                <div className="shrink-0 px-8 pt-6 md:px-10">
+                    <StepIndicator />
+                </div>
+            )}
 
-            {/* Middle — takes remaining height, contains the step grid */}
+            {/* Middle */}
             <div className="min-h-0 flex-1">
-                <Step
-                    step={1}
-                    media={
-                        <StepImage
-                            src="https://placehold.co/900x1400/4f46e5/ffffff?text=1.+Welcome"
-                            alt="Welcome"
-                        />
-                    }
-                >
-                    <Header
-                        title="Welcome to Startup Grind"
-                        description="Here's a quick look at what you can do."
-                    />
-                    <FeatureCarousel
-                        features={FEATURES}
-                        value={featureIndex}
-                        onChange={setFeatureIndex}
-                    />
-                </Step>
+                <StepOneCarousel
+                    featureIndex={flow.featureIndex}
+                    selectFeature={flow.selectFeature}
+                    allFeaturesVisited={flow.allFeaturesVisited}
+                />
 
                 <Step
                     step={2}
                     media={
                         <StepImage
-                            src="https://placehold.co/900x1400/7c3aed/ffffff?text=2.+Your+Role"
-                            alt=""
+                            src="/onboarding/step2.webp"
+                            alt="Choose your role"
                         />
                     }
                 >
@@ -363,8 +411,8 @@ function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
                     />
                     <ChoiceGroup
                         name="role"
-                        value={role}
-                        onChange={setRole}
+                        value={flow.role}
+                        onChange={flow.setRole}
                         options={ROLES}
                         columns={2}
                     />
@@ -374,8 +422,8 @@ function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
                     step={3}
                     media={
                         <StepImage
-                            src="https://placehold.co/900x1400/0d9488/ffffff?text=3.+Your+Goal"
-                            alt=""
+                            src="/onboarding/step3.webp"
+                            alt="Set your goal"
                         />
                     }
                 >
@@ -385,8 +433,8 @@ function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
                     />
                     <ChoiceGroup
                         name="goal"
-                        value={goal}
-                        onChange={setGoal}
+                        value={flow.goal}
+                        onChange={flow.setGoal}
                         options={GOALS}
                         columns={2}
                     />
@@ -396,8 +444,8 @@ function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
                     step={4}
                     media={
                         <StepImage
-                            src="https://placehold.co/900x1400/d97706/ffffff?text=4.+Industry"
-                            alt=""
+                            src="/onboarding/step4.webp"
+                            alt="Pick your industry"
                         />
                     }
                 >
@@ -407,8 +455,8 @@ function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
                     />
                     <ChoiceGroup
                         name="industry"
-                        value={industry}
-                        onChange={setIndustry}
+                        value={flow.industry}
+                        onChange={flow.setIndustry}
                         options={INDUSTRIES}
                         columns={2}
                     />
@@ -418,8 +466,8 @@ function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
                     step={5}
                     media={
                         <StepImage
-                            src="https://placehold.co/900x1400/db2777/ffffff?text=5.+About+You"
-                            alt=""
+                            src="/onboarding/step6.png"
+                            alt="Tell us about yourself"
                         />
                     }
                 >
@@ -428,15 +476,15 @@ function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
                         description="One or two lines is plenty. This shows up on your profile."
                     />
                     <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        value={flow.description}
+                        onChange={(e) => flow.setDescription(e.target.value)}
                         placeholder="Founder building in fintech. Based in Budapest. Previously at…"
                         rows={4}
                         maxLength={500}
                         className="w-full resize-none rounded-xl border bg-transparent px-4 py-3 text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                     <p className="text-right text-xs text-muted-foreground">
-                        {description.length} / 500
+                        {flow.description.length} / 500
                     </p>
                 </Step>
 
@@ -444,8 +492,8 @@ function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
                     step={6}
                     media={
                         <StepImage
-                            src="https://placehold.co/900x1400/0284c7/ffffff?text=6.+You're+Ready"
-                            alt=""
+                            src="/onboarding/step7.png"
+                            alt="You're all set"
                         />
                     }
                 >
@@ -457,28 +505,16 @@ function Steps({ categories, onSubmit, onSkip, submitting }: StepsProps) {
                 </Step>
             </div>
 
-            {/* Fixed bottom — skip + navigation */}
-            <div className="flex shrink-0 items-center justify-between gap-3 border-t bg-background/60 px-8 py-4 backdrop-blur-sm md:px-10">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={onSkip}
-                    disabled={submitting}
-                    className="text-xs text-muted-foreground"
-                >
-                    Skip for now
-                </Button>
-
-                <Navigation
-                    completeLabel={submitting ? 'Finishing…' : 'Finish'}
-                    onCompleteOverride={() =>
-                        onSubmit({
-                            area_of_work: resolvedAreaOfWork,
-                            description: description.trim() || null,
-                        })
-                    }
-                />
-            </div>
+            {/* Footer (hidden on step 1) */}
+            {step !== 1 && (
+                <div className="shrink-0 border-t bg-background/60 px-8 py-4 backdrop-blur-sm md:px-10">
+                    <Navigation
+                        completeLabel={flow.submitting ? 'Finishing…' : 'Finish'}
+                        onCompleteOverride={flow.submit}
+                        nextDisabled={!canProceed}
+                    />
+                </div>
+            )}
         </>
     );
 }
@@ -498,32 +534,7 @@ export function AppOnboarding({
     categories,
     onClose,
 }: AppOnboardingProps) {
-    const [submitting, setSubmitting] = useState(false);
-
-    const submit = (payload: {
-        area_of_work: string | null;
-        description: string | null;
-    }) => {
-        setSubmitting(true);
-        router.post('/onboarding/complete', payload, {
-            preserveScroll: true,
-            onFinish: () => setSubmitting(false),
-            onSuccess: () => onClose(),
-        });
-    };
-
-    const skip = () => {
-        setSubmitting(true);
-        router.post(
-            '/onboarding/skip',
-            {},
-            {
-                preserveScroll: true,
-                onFinish: () => setSubmitting(false),
-                onSuccess: () => onClose(),
-            },
-        );
-    };
+    const flow = useOnboardingFlow({ categories, onClose });
 
     return (
         <Dialog open={open} onOpenChange={() => {}}>
@@ -541,16 +552,11 @@ export function AppOnboarding({
                 showCloseButton={false}
             >
                 <Onboarding
-                    totalSteps={6}
+                    totalSteps={TOTAL_STEPS}
                     onComplete={() => {}}
-                    className="h-[640px] max-h-[88vh]"
+                    className="h-[560px] sm:h-[600px] md:h-[640px] lg:h-[680px] xl:h-[720px]"
                 >
-                    <Steps
-                        categories={categories}
-                        onSubmit={submit}
-                        onSkip={skip}
-                        submitting={submitting}
-                    />
+                    <Steps flow={flow} />
                 </Onboarding>
             </DialogContent>
         </Dialog>
