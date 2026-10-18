@@ -187,7 +187,7 @@ export function NavMain() {
                             className={cn(activeClasses, itemMotion)}
                         >
                             <Link href="/events" prefetch>
-                                <CalendarDays className="mr-2 h-4 w-4" />
+                                <CalendarDays className=" h-4 w-4" />
                                 <span>Events</span>
                             </Link>
                         </SidebarMenuButton>
