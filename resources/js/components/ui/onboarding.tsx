@@ -5,7 +5,7 @@ import {
     useState,
     type ReactNode,
 } from 'react';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -189,9 +189,8 @@ function Header({
 /* -----------------------------------------------------------------
  |  Navigation
  |
- |  Two equal-width pill buttons, matching step 1's footer. Both
- |  variants (step 1's local footer + this shared one for 2–6) now
- |  look identical.
+ |  Two equal-width pill buttons. When `submitting` is true, the
+ |  Finish button shows a spinner and both buttons disable.
  | ----------------------------------------------------------------- */
 
 type NavigationProps = {
@@ -200,6 +199,7 @@ type NavigationProps = {
     previousLabel?: string;
     onCompleteOverride?: () => void;
     nextDisabled?: boolean;
+    submitting?: boolean;
 };
 
 function Navigation({
@@ -208,6 +208,7 @@ function Navigation({
     previousLabel = 'Back',
     onCompleteOverride,
     nextDisabled = false,
+    submitting = false,
 }: NavigationProps) {
     const { isFirst, isLast, next, previous, complete } = useOnboarding();
 
@@ -217,7 +218,7 @@ function Navigation({
                 type="button"
                 variant="outline"
                 onClick={previous}
-                disabled={isFirst}
+                disabled={isFirst || submitting}
                 className="h-11 flex-1 rounded-full text-sm"
             >
                 <ArrowLeft className="size-4" />
@@ -228,16 +229,21 @@ function Navigation({
                 <Button
                     type="button"
                     onClick={onCompleteOverride ?? complete}
+                    disabled={submitting}
                     className="h-11 flex-1 gap-2 rounded-full text-sm"
                 >
-                    <Check className="size-4" />
+                    {submitting ? (
+                        <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                        <Check className="size-4" />
+                    )}
                     {completeLabel}
                 </Button>
             ) : (
                 <Button
                     type="button"
                     onClick={next}
-                    disabled={nextDisabled}
+                    disabled={nextDisabled || submitting}
                     className="h-11 flex-1 gap-2 rounded-full text-sm"
                 >
                     {nextLabel}

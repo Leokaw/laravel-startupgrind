@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, Loader2 } from 'lucide-react';
 import {
     Header,
     Navigation,
@@ -15,10 +15,10 @@ import { cn } from '@/lib/utils';
 import {
     FEATURES,
     GOALS,
-    INDUSTRIES,
     ROLES,
     TIPS,
     TOTAL_STEPS,
+    categoriesToOptions,
     useOnboardingFlow,
     type ChoiceGroupItem,
     type Feature,
@@ -41,20 +41,45 @@ type OnboardingShared = {
 /**
  * Step image used on the left column of split steps (2–6).
  * Darkened slightly so it doesn't compete with the content on the
- * right — a subtle brightness filter + gradient overlay.
+ * right. Shows a subtle pulse while the image downloads.
  */
 function StepImage({ src, alt }: { src: string; alt: string }) {
+    const [loaded, setLoaded] = useState(false);
+    const [errored, setErrored] = useState(false);
+
     return (
-        <div className="relative h-full w-full">
+        <div className="relative h-full w-full overflow-hidden">
+            {/* Pulse skeleton while the image downloads */}
+            {!loaded && !errored && (
+                <div className="absolute inset-0 animate-pulse bg-muted-foreground/10" />
+            )}
+
+            {/* Fallback if the file is missing or fails to load */}
+            {errored && (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                    <span className="text-xs text-muted-foreground">
+                        Image unavailable
+                    </span>
+                </div>
+            )}
+
             <img
                 src={src}
                 alt={alt}
-                className="h-full w-full object-cover brightness-[0.72]"
+                className={cn(
+                    'h-full w-full object-cover brightness-[0.72] transition-opacity duration-300 ease-out',
+                    loaded ? 'opacity-100' : 'opacity-0',
+                )}
                 draggable={false}
-                loading="lazy"
+                onLoad={() => setLoaded(true)}
+                onError={() => setErrored(true)}
             />
-            {/* Soft vignette so the edges blend into the surface */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
+
+            {/* Vignette — only after the image is visible so it doesn't
+                darken the skeleton. */}
+            {loaded && (
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
+            )}
         </div>
     );
 }
@@ -185,6 +210,23 @@ function FeatureCarousel({
     value: number;
     onChange: (i: number) => void;
 }) {
+    // Track which slides have finished loading so we can show a spinner
+    // over the preview until the active one is ready.
+    const [loadedImages, setLoadedImages] = useState<Set<number>>(
+        () => new Set(),
+    );
+
+    const markLoaded = (i: number) => {
+        setLoadedImages((prev) => {
+            if (prev.has(i)) return prev;
+            const next = new Set(prev);
+            next.add(i);
+            return next;
+        });
+    };
+
+    const activeLoaded = loadedImages.has(value);
+
     return (
         <div className="grid h-full min-h-0 grid-cols-1 items-stretch gap-5 md:grid-cols-2 md:gap-8">
             {/* Left — feature list */}
@@ -239,6 +281,14 @@ function FeatureCarousel({
             {/* Right — preview image, fills the row */}
             <div className="order-1 min-h-0 md:order-2">
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border bg-muted shadow-sm md:aspect-auto md:h-full">
+                    {/* Spinner overlay — only visible while the active
+                        slide's image is still downloading. */}
+                    {!activeLoaded && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted">
+                            <Loader2 className="size-6 animate-spin text-muted-foreground/50" />
+                        </div>
+                    )}
+
                     {features.map((feature, i) => (
                         <img
                             key={feature.title}
@@ -251,6 +301,8 @@ function FeatureCarousel({
                                     : 'opacity-0 scale-105',
                             )}
                             draggable={false}
+                            onLoad={() => markLoaded(i)}
+                            onError={() => markLoaded(i)}
                         />
                     ))}
                 </div>
@@ -356,10 +408,14 @@ function StepOneCarousel({
 
 type StepsProps = {
     flow: ReturnType<typeof useOnboardingFlow>;
+    categories: Record<string, string>;
 };
 
-function Steps({ flow }: StepsProps) {
+function Steps({ flow, categories }: StepsProps) {
     const { step } = useOnboarding();
+
+    // Turn the server-provided `{ key: 'Label' }` map into radio options.
+    const industryOptions = categoriesToOptions(categories);
 
     const canProceed = (() => {
         switch (step) {
@@ -457,7 +513,7 @@ function Steps({ flow }: StepsProps) {
                         name="industry"
                         value={flow.industry}
                         onChange={flow.setIndustry}
-                        options={INDUSTRIES}
+                        options={industryOptions}
                         columns={2}
                     />
                 </Step>
@@ -466,7 +522,7 @@ function Steps({ flow }: StepsProps) {
                     step={5}
                     media={
                         <StepImage
-                            src="/onboarding/step6.png"
+                            src="/onboarding/step5.webp"
                             alt="Tell us about yourself"
                         />
                     }
@@ -492,7 +548,7 @@ function Steps({ flow }: StepsProps) {
                     step={6}
                     media={
                         <StepImage
-                            src="/onboarding/step7.png"
+                            src="/onboarding/step6.webp"
                             alt="You're all set"
                         />
                     }
@@ -512,6 +568,7 @@ function Steps({ flow }: StepsProps) {
                         completeLabel={flow.submitting ? 'Finishing…' : 'Finish'}
                         onCompleteOverride={flow.submit}
                         nextDisabled={!canProceed}
+                        submitting={flow.submitting}
                     />
                 </div>
             )}
@@ -556,7 +613,7 @@ export function AppOnboarding({
                     onComplete={() => {}}
                     className="h-[560px] sm:h-[600px] md:h-[640px] lg:h-[680px] xl:h-[720px]"
                 >
-                    <Steps flow={flow} />
+                    <Steps flow={flow} categories={categories} />
                 </Onboarding>
             </DialogContent>
         </Dialog>
@@ -575,7 +632,7 @@ export function OnboardingGate() {
 
     return (
         <AppOnboarding
-            open
+            open={true}
             categories={onboarding.categories}
             onClose={() => setDismissed(true)}
         />

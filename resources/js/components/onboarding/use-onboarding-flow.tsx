@@ -89,25 +89,32 @@ export const GOALS: ChoiceGroupItem[] = [
     { value: 'events', label: 'Find events' },
 ];
 
-export const INDUSTRIES: ChoiceGroupItem[] = [
-    { value: 'fintech', label: 'Fintech' },
-    { value: 'healthtech', label: 'Healthtech' },
-    { value: 'ai', label: 'AI & ML' },
-    { value: 'saas', label: 'SaaS' },
-    { value: 'consumer', label: 'Consumer' },
-    { value: 'climate', label: 'Climate' },
-    { value: 'marketplace', label: 'Marketplace' },
-    { value: 'hardware', label: 'Hardware' },
-];
-
 export const TIPS: string[] = [
-    'Complete your profile — a short description and a photo go a long way.',
+    'Complete your profile, a short description and a photo go a long way.',
     'Use saved searches to get notified when someone matching your filters joins.',
     'RSVP early to popular chapter events. Spots fill up fast.',
     'Warm intros take a couple of days. Plan ahead before big conferences.',
 ];
 
 export const TOTAL_STEPS = 6;
+
+/* =================================================================
+ |  Helpers
+ | ================================================================= */
+
+/**
+ * Convert the server's category map (`{ key: 'Label' }`) into the shape
+ * `ChoiceGroup` expects. Keys are preserved so the backend's `in:`
+ * validation on `area_of_work` accepts them without translation.
+ */
+export function categoriesToOptions(
+    categories: Record<string, string>,
+): ChoiceGroupItem[] {
+    return Object.entries(categories).map(([value, label]) => ({
+        value,
+        label,
+    }));
+}
 
 /* =================================================================
  |  Hook — the API that drives the stepper
@@ -181,16 +188,26 @@ export function useOnboardingFlow({
         router.post(
             '/onboarding/complete',
             {
+                role,
+                goal,
                 area_of_work: resolvedAreaOfWork,
                 description: description.trim() || null,
             },
             {
-                preserveScroll: true,
+                preserveScroll: false,
+                preserveState: false,
                 onFinish: () => setSubmitting(false),
-                onSuccess: () => onClose(),
+                onSuccess: () => {
+                    // Close locally so the modal disappears immediately.
+                    onClose();
+
+                    // Force-refresh the shared `onboarding` prop so a fresh
+                    // gate mounted by the redirect sees `required: false`.
+                    router.reload({ only: ['onboarding', 'auth'] });
+                },
             },
         );
-    }, [resolvedAreaOfWork, description, onClose]);
+    }, [role, goal, resolvedAreaOfWork, description, onClose]);
 
     return {
         // Step 1

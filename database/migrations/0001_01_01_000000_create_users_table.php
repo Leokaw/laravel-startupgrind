@@ -13,22 +13,32 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-              // Set by OnboardingController when the user finishes or skips
-            // the onboarding modal. Null = still needs onboarding.
+
+            // Set by OnboardingController when the user finishes the
+            // onboarding modal. Null = still needs onboarding.
             $table->timestamp('onboarded_at')->nullable();
+
             $table->string('profile_photo_path')->nullable();
             $table->string('password');
             $table->string('user_type');
-            
             $table->rememberToken();
             $table->timestamps();
 
-        
-
-
+            // Onboarding step 5 — "Tell us about yourself"
             $table->text('description')->nullable();
 
+            // Onboarding step 4 — "Which industry are you in?"
+            // Key from App\Support\ServiceCategory::ALL.
             $table->string('area_of_work')->nullable();
+
+            // Onboarding step 2 — "What best describes you?"
+            // One of: founder, investor, operator, freelancer,
+            // designer, developer.
+            $table->string('role')->nullable();
+
+            // Onboarding step 3 — "What are you here to do?"
+            // One of: raise, cofounder, hire, network, learn, events.
+            $table->string('goal')->nullable();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

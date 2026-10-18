@@ -15,6 +15,30 @@ class UserFactory extends Factory
 {
     protected static ?string $password;
 
+    /**
+     * Valid values for the `role` column (onboarding step 2).
+     */
+    public const ROLES = [
+        'founder',
+        'investor',
+        'operator',
+        'freelancer',
+        'designer',
+        'developer',
+    ];
+
+    /**
+     * Valid values for the `goal` column (onboarding step 3).
+     */
+    public const GOALS = [
+        'raise',
+        'cofounder',
+        'hire',
+        'network',
+        'learn',
+        'events',
+    ];
+
     public function definition(): array
     {
         return [
@@ -27,7 +51,11 @@ class UserFactory extends Factory
             'company_id'         => null,
             'approved_at'        => null,
             'profile_photo_path' => null,
-            // Both optional and null by default — states below fill them.
+            // Optional onboarding fields — all null by default. States
+            // below fill them.
+            'onboarded_at'       => null,
+            'role'               => null,
+            'goal'               => null,
             'description'        => null,
             'area_of_work'       => null,
         ];
@@ -104,28 +132,35 @@ class UserFactory extends Factory
     }
 
     /* -----------------------------------------------------------------
-     |  Profile-detail states
+     |  Onboarding states
      | ----------------------------------------------------------------- */
 
     /**
-     * Populate both optional profile fields with plausible content.
-     * Area of work is picked from the same enum the profile form uses,
-     * so generated data always passes `ProfileUpdateRequest::rules()`.
+     * Mark the user as having finished onboarding.
      */
-    public function withProfile(): static
+    public function onboarded(): static
     {
-        return $this->state(function () {
-            $areas = array_keys(ServiceCategory::all());
-
-            return [
-                'description'  => fake()->paragraphs(2, true),
-                'area_of_work' => fake()->randomElement($areas),
-            ];
-        });
+        return $this->state(fn () => ['onboarded_at' => now()]);
     }
 
     /**
-     * Set a specific area-of-work key (must be a valid ServiceCategory).
+     * Set the user's `role` to a specific value. Must be one of ROLES.
+     */
+    public function withRole(string $role): static
+    {
+        return $this->state(fn () => ['role' => $role]);
+    }
+
+    /**
+     * Set the user's `goal` to a specific value. Must be one of GOALS.
+     */
+    public function withGoal(string $goal): static
+    {
+        return $this->state(fn () => ['goal' => $goal]);
+    }
+
+    /**
+     * Set the user's `area_of_work` key. Must be a valid ServiceCategory.
      */
     public function areaOfWork(string $key): static
     {
@@ -133,11 +168,35 @@ class UserFactory extends Factory
     }
 
     /**
-     * Set a specific bio.
+     * Set the user's bio.
      */
     public function withDescription(string $description): static
     {
         return $this->state(fn () => ['description' => $description]);
+    }
+
+    /**
+     * Fill in every onboarding field with plausible content.
+     *
+     * - `role` and `goal` are picked from the config arrays above so
+     *   they always pass the OnboardingController's `in:` validation.
+     * - `area_of_work` is picked from ServiceCategory::all() so it
+     *   always passes the same rule.
+     * - `onboarded_at` is set so `needsOnboarding()` returns false.
+     */
+    public function withProfile(): static
+    {
+        return $this->state(function () {
+            $areas = array_keys(ServiceCategory::all());
+
+            return [
+                'onboarded_at' => now(),
+                'role'         => fake()->randomElement(self::ROLES),
+                'goal'         => fake()->randomElement(self::GOALS),
+                'description'  => fake()->paragraphs(2, true),
+                'area_of_work' => fake()->randomElement($areas),
+            ];
+        });
     }
 
     /* -----------------------------------------------------------------
