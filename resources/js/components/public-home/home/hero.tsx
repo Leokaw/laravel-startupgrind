@@ -115,16 +115,16 @@ export default function Hero() {
                             showExtras ? 'hero-fade-in' : 'invisible opacity-0',
                         )}
                     >
-                        <Button asChild size="lg">
-                            <Link href="/register">
+                        <Button className="md:text-lg md:px-20"  asChild size="lg">
+                            <Link  href="/register">
                                 Try it for free
                                 <ChevronRight className="size-4" />
                             </Link>
                         </Button>
-                        <Button asChild size="lg" variant="outline">
-                            <Link href="/manifest">
+                        <Button className="md:text-lg text-gray-800 px-6"  asChild size="lg"  variant="outline">
+                            <Link  href="/manifest">
                                 Our manifest
-                                <BookOpen className="ml-2 size-4" />
+                        
                             </Link>
                         </Button>
                     </div>
@@ -135,8 +135,8 @@ export default function Hero() {
                     >
                         {highlights.map(({ icon: Icon, title, text }) => (
                             <li key={title} className="flex items-center gap-4">
-                                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
-                                    <Icon className="size-4" />
+                                <span className="flex size-9 shrink-0 bg-primary/20 items-center justify-center rounded-full bg-muted text-foreground">
+                                    <Icon className="size-4 text-primary/70" />
                                 </span>
                                 <span className="leading-tight">
                                     <span className="block text-sm font-medium text-foreground">{title}</span>

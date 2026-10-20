@@ -67,8 +67,8 @@ export default function PublicHeader({ auth }: Props) {
                             </Button>
                         ) : (
                             <>
-                                <LanguageSwitcher />
-                           <AppearanceDropdown />
+
+
                                 <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex dark:text-gray-100">
                                     <Link href={login()}>
                                         Login <ChevronRight className=" h-4 w-4" />
@@ -81,7 +81,7 @@ export default function PublicHeader({ auth }: Props) {
                                 </Button>
                             </>
                         )}
-
+                        <LanguageSwitcher />
                     </div>
                 </div>
             </div>

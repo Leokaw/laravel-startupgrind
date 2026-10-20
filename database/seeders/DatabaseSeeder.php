@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
             ->withGoal('hire')
             ->withDescription(
                 'We build internal tools and data pipelines for fast-growing SaaS teams. '
-                . 'Our team of six ships end-to-end: discovery, design, implementation, and ongoing support.'
+                    . 'Our team of six ships end-to-end: discovery, design, implementation, and ongoing support.'
             )
             ->areaOfWork('development')
             ->onboarded()
@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
             ->withGoal('network')
             ->withDescription(
                 'Freelance product designer with eight years of experience across fintech and healthcare. '
-                . 'I help early-stage teams go from rough idea to shipped product — research, UX, and UI.'
+                    . 'I help early-stage teams go from rough idea to shipped product — research, UX, and UI.'
             )
             ->areaOfWork('design')
             ->onboarded()
@@ -78,7 +78,7 @@ class DatabaseSeeder extends Seeder
             ->withGoal('learn')
             ->withDescription(
                 'Founder-curious operator. Currently exploring the AI tooling space. '
-                . 'Happy to chat about go-to-market, hiring, or anything founder-adjacent.'
+                    . 'Happy to chat about go-to-market, hiring, or anything founder-adjacent.'
             )
             ->areaOfWork('consulting')
             ->onboarded()

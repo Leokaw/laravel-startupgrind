@@ -18,17 +18,17 @@ const group = [...sponsors, ...sponsors];
 
 function Group({ hidden = false }: { hidden?: boolean }) {
     return (
-        <ul aria-hidden={hidden || undefined} className="flex shrink-0 items-stretch">
+        <ul aria-hidden={hidden || undefined} className="flex shrink-0  items-stretch">
             {group.map((sponsor, i) => (
                 <li
                     key={`${sponsor.name}-${i}`}
-                    className="flex h-16 w-40 shrink-0 items-center justify-center border-r border-border px-6 sm:h-20 sm:w-44"
+                    className="flex h-16 w-40 shrink-0 items-center justify-center border-r border-border px-6 lg:h-28 lg:w-44"
                 >
                     <img
                         src={sponsor.src}
                         alt={hidden ? '' : sponsor.name}
                         draggable={false}
-                        className="max-h-6 w-auto max-w-full object-contain select-none sm:max-h-14"
+                        className="max-h-6 w-auto max-w-full object-contain select-none lg:max-h-18"
                     />
                 </li>
             ))}
@@ -62,7 +62,7 @@ export default function SponsorsMarquee() {
                     {/* Red corner markers */}
                     <span aria-hidden className="absolute -top-[3px] -left-[3px] size-1.5 bg-primary" />
 
-                    <p className="font-mono text-[10px] leading-relaxed tracking-wide text-foreground uppercase sm:text-xs">
+                    <p className="font-mono text-[10px] leading-relaxed tracking-wide text-foreground uppercase sm:text-sm">
                         Powering ideas for
                         <br />
                         the best &amp; brightest
