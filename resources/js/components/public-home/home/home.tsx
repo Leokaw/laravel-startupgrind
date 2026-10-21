@@ -2,6 +2,7 @@ import BottomFeatures from './bottom-features';
 import Features from './features';
 import Hero from './hero';
 import Partnership from './partnership';
+import SpeakersGrid from './speakers-grid';
 import SponsorsMarquee from './sponsors';
 import StoryAndCommunity from './story-and-comunity';
 
@@ -14,6 +15,7 @@ export default function Home() {
             <Features />
             <BottomFeatures />
             <StoryAndCommunity />
+            <SpeakersGrid />
         </div>
     );
 }
