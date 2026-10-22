@@ -93,7 +93,7 @@ export default function SpeakersGrid() {
                 <Corner className="-right-[3.5px] -bottom-[3.5px]" />
 
                 {/* Intro copy */}
-                <div className="px-6 mt-4 pt-8 lg:px-8 lg:py-10">
+                <div className="px-6  pt-8 lg:px-8 lg:py-10">
                     <TextAnimate
                         as="h2"
                         type="whipInUp"
@@ -110,7 +110,7 @@ export default function SpeakersGrid() {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2 lg:grid-cols-6">
+                <div className="grid grid-cols-1 gap-6 p-6  pb-16 md:grid-cols-2 lg:grid-cols-6">
                     {speakers.map((speaker) => (
                         <a
                             key={speaker.image}

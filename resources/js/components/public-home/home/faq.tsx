@@ -11,8 +11,9 @@ import { cn } from "@/lib/utils"
 
 // Red corner square
 function Corner({ className }: { className: string }) {
+    // Added 'hidden lg:block' so corners only show on desktop
     return (
-        <span aria-hidden className={`absolute z-20 size-1.5 bg-primary ${className}`} />
+        <span aria-hidden className={`hidden lg:block absolute z-20 size-1.5 bg-primary ${className}`} />
     )
 }
 
@@ -89,17 +90,16 @@ export default function FAQ() {
                 style={gridStyle}
             />
 
-            <div className="relative mx-auto max-w-7xl border-x border-border">
+            <div className="relative mx-auto max-w-7xl border-x border-border ">
                 {/* Top corners */}
                 <Corner className="-top-[3.5px] -left-[3.5px]" />
                 <Corner className="-top-[3.5px] -right-[3.5px]" />
 
                 {/* Bottom corners */}
-                <Corner className="-bottom-[3.5px] -left-[3.5px]" />
-                <Corner className="-right-[3.5px] -bottom-[3.5px]" />
+            
 
                 {/* Intro copy */}
-                <div className="px-6 pt-6 lg:px-8 lg:py-10">
+                <div className="px-6 pt-10 lg:px-8 lg:py-10">
                     <TextAnimate
                         as="h2"
                         type="whipInUp"
@@ -117,14 +117,14 @@ export default function FAQ() {
                 </div>
 
                 {/* Accordion */}
-                <div className="px-6 pb-10 lg:px-8 lg:pb-16">
+                <div className="px-4 pb-10 pt-4 lg:px-8 lg:pb-16">
                     <Accordion type="single" collapsible className="gap-3">
                         {faqs.map((faq, index) => (
                             <AccordionItem
                                 key={faq.question}
                                 value={`item-${index}`}
                                 className={cn(
-                                    "mb-3 rounded-2xl border border-border bg-[#EBEAE4] px-5 sm:px-6",
+                                    "mb-1 rounded-2xl border border-border bg-[#EBEAE4] px-5 sm:px-6",
                                     "not-last:border-b last:mb-0"
                                 )}
                             >

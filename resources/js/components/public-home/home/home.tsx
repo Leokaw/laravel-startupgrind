@@ -1,4 +1,3 @@
-
 import BottomFeatures from './bottom-features';
 import FAQ from './faq';
 import Features from './features';
@@ -11,7 +10,8 @@ import StoryAndCommunity from './story-and-comunity';
 
 export default function Home() {
     return (
-        <div className="flex flex-1 flex-col">
+        /* Added 'force-light' to the wrapper */
+        <div className="force-light flex flex-1 flex-col bg-background text-foreground">
             <Hero />
             <SponsorsMarquee />
             <Partnership />
@@ -20,7 +20,7 @@ export default function Home() {
             <StoryAndCommunity />
             <SpeakersGrid />
             <FAQ />
-            <Footer/>
+            <Footer />
         </div>
     );
 }

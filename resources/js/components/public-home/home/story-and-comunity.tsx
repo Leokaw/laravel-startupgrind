@@ -28,7 +28,7 @@ export default function StoryAndCommunity() {
                 <Corner className="-bottom-[3.5px] -left-[3.5px]" />
                 <Corner className="-right-[3.5px] -bottom-[3.5px]" />
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 lg:px-0 lg:mt-0 pt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 lg:px-0 lg:pt-0 pt-6">
                     <StoryTextAndGlobe />
                     <CommunityCta />
                 </div>
