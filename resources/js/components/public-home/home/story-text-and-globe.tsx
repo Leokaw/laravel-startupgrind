@@ -39,7 +39,7 @@ export default function StoryTextAndGlobe() {
     const animate = inView ? 'visible' : 'hidden';
 
     return (
-        <div ref={ref} className="relative lg:col-span-2 border-b lg:border-b-0 lg:border-r border-border flex flex-col md:flex-row">
+        <div ref={ref} className="relative lg:px-0 px-2 lg:col-span-2 border-b lg:border-b-0 lg:border-r border-border flex flex-col md:flex-row">
             {/* Inner corners for the 2/3 intersection */}
             <Corner className="hidden lg:block -top-[3.5px] -right-[3.5px]" />
             <Corner className="hidden lg:block -bottom-[3.5px] -right-[3.5px]" />
@@ -109,7 +109,7 @@ export default function StoryTextAndGlobe() {
                 <img
                     src="/home/globe.png"
                     alt="Global network"
-                    className="w-[120%] max-w-none object-contain"
+                    className="lg:w-[120%] w-[90%] max-w-none object-contain"
                 />
             </div>
         </div>

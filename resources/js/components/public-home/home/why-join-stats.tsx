@@ -59,13 +59,13 @@ function Stats() {
         <div 
             ref={ref} 
             // Added rounded-2xl and overflow-hidden
-            className="relative mt-8 grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-background"
+            className="relative mt-8 grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-background "
         >
             {stats.map((stat, i) => (
                 <div
                     key={stat.label}
                     className={cn(
-                        'group flex flex-col items-start gap-3 p-5 transition-colors duration-300 hover:bg-muted/40 sm:p-6',
+                        'group flex flex-col items-start gap-3 p-6 transition-colors duration-300 hover:bg-muted/40',
                         i % 2 === 0 && 'border-r border-border',
                         i < 2 && 'border-b border-border',
                     )}
@@ -94,7 +94,7 @@ function Stats() {
 
 export default function WhyJoinStats() {
     return (
-        <div className="border-border p-8 lg:border-r lg:p-12">
+        <div className="border-border p-6 lg:mt-0 mt-5 lg:border-r lg:p-12">
             <h2 className="text-3xl leading-[1] font-light tracking-tight text-foreground sm:text-4xl">
                 <TextAnimate
                     as="span"

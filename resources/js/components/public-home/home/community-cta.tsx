@@ -4,7 +4,7 @@ import { Link } from '@inertiajs/react';
 
 export default function CommunityCta() {
     return (
-        <div className="relative flex flex-col h-full bg-muted/5">
+        <div className="relative flex flex-col h-full lg:pt-0 lg:px-0 px-2 pt-4 bg-muted/5">
             {/* The Red Glow - anchored to the bottom right and bleeding upwards */}
             <div
                 aria-hidden
@@ -13,7 +13,7 @@ export default function CommunityCta() {
 
             {/* Text & Buttons Area */}
             <div className="relative z-10 p-4 lg:p-8 flex-1">
-                <h2 className="text-lg leading-[1.1] w-full tracking-tight font-light text-gray-700 lg:text-3xl">
+                <h2 className="text-2xl leading-[1.1] w-full tracking-tight font-light text-gray-700 lg:text-3xl">
                     We are shaping what's next <br />
                     <span className="italic">for your company </span>
                 </h2>

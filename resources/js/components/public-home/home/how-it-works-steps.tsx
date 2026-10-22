@@ -42,7 +42,7 @@ export default function HowItWorksSteps() {
     const inView = useInView(ref, { once: true, amount: 0.2 });
 
     return (
-        <div className="flex h-full flex-col justify-center bg-muted/5 p-8 lg:p-12">
+        <div className="flex h-full flex-col justify-center bg-muted/5 p-6 pb-12 lg:p-12">
             <div ref={ref} className="grid gap-4 sm:grid-cols-2">
                 {steps.map(({ icon: Icon, title, description }, i) => (
                     <div

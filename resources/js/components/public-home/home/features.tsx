@@ -33,7 +33,8 @@ const FADE_MS = 1400;
 const FADE_STAGGER_MS = 300;
 
 function Corner({ className }: { className: string }) {
-    return <span aria-hidden className={`absolute z-20 size-1.5 bg-primary ${className}`} />;
+    // Added 'hidden lg:block' so it only shows on desktop
+    return <span aria-hidden className={`hidden lg:block absolute z-20 size-1.5 bg-primary ${className}`} />;
 }
 
 export default function Features() {
@@ -61,7 +62,7 @@ export default function Features() {
                 }
             `}</style>
 
-            <div className="relative mx-auto max-w-7xl border-x border-border">
+            <div className="relative mx-auto max-w-7xl border-x border-border lg:px-0 px-3">
                 <Corner className="-bottom-[3.5px] -left-[3.5px]" />
                 <Corner className="-right-[3.5px] -bottom-[3.5px]" />
 

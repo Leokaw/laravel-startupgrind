@@ -22,10 +22,10 @@ const endIcon = (
 );
 
 const bubbleVariants = [
-    { size: 'xs', className: 'sm:hidden' },
-    { size: 'sm', className: 'hidden sm:block lg:hidden' },
-    { size: 'md', className: 'hidden lg:block xl:hidden' },
-    { size: 'lg', className: 'hidden xl:block' },
+    { size: 'sm', className: 'sm:hidden' }, // Bumped from 'xs' to 'sm' for mobile
+    { size: 'md', className: 'hidden sm:block lg:hidden' }, // Bumped from 'sm' to 'md'
+    { size: 'lg', className: 'hidden lg:block xl:hidden' }, // Bumped from 'md' to 'lg'
+    { size: 'lg', className: 'hidden xl:block scale-120' }, // Added a slight scale for extra large screens
 ] as const;
 
 function ResponsiveBubbles() {
@@ -41,7 +41,8 @@ function ResponsiveBubbles() {
 }
 
 function Corner({ className }: { className: string }) {
-    return <span aria-hidden className={`absolute z-20 size-1.5 bg-primary ${className}`} />;
+    // Added 'hidden lg:block' to hide on mobile/tablet
+    return <span aria-hidden className={`hidden lg:block absolute z-20 size-1.5 bg-primary ${className}`} />;
 }
 
 const headline = 'The leading global startup community.';
@@ -66,7 +67,7 @@ export default function Partnership() {
     }, [inView]);
 
     return (
-        <section ref={ref} className="relative border-b border-border bg-background">
+        <section ref={ref} id="about" className="relative border-b border-border bg-background">
             <style>{`
                 @keyframes partnership-fade-in {
                     from { opacity: 0; visibility: hidden; transform: translateY(10px); }

@@ -40,8 +40,8 @@ const description =
 const countWords = (text: string) => text.split(' ').length;
 const TEXT_DONE_MS = (0.2 + (Math.max(countWords(intro), countWords(description)) - 1) * 0.1 + 0.5) * 1000;
 
-const FADE_MS = 1400; 
-const FADE_STAGGER_MS = 300; 
+const FADE_MS = 1000; 
+const FADE_STAGGER_MS = 200; 
 
 export default function Hero() {
     const [showExtras, setShowExtras] = useState(false);
@@ -52,7 +52,7 @@ export default function Hero() {
     }, []);
 
     return (
-        <div className="relative isolate flex flex-1 flex-col overflow-x-clip">
+        <div id='home' className="relative isolate flex flex-1 flex-col overflow-x-clip">
             <style>{`
                 @keyframes hero-fade-in {
                     from { opacity: 0; visibility: hidden; }
@@ -72,7 +72,7 @@ export default function Hero() {
             <div className="mx-auto grid w-full max-w-7xl flex-1 items-center gap-8 px-6 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-8 lg:px-8 lg:py-6">
                 {/* Copy */}
                 <div className="max-w-2xl">
-                    <h1 className="relative z-20 md:text-7xl leading-[1] text-gray-700 tracking-tight font-thin text-foreground sm:text-5xl">
+                    <h1 className="relative z-20 text-4xl leading-[1] text-gray-700 tracking-tight font-thin text-foreground lg:text-5xl">
                         <TextAnimate as="span" by="word" type="fadeInUp" text="Where Ambition" className="" style={visible} />
                         
                         {/* Apply w-max and whitespace-nowrap to the wrapper only */}
@@ -89,13 +89,13 @@ export default function Hero() {
                         </span>
                     </h1>
 
-                    <div className="relative z-20 mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+                    <div className="relative z-20 mt-4 max-w-xs lg:w-full leading-relaxed text-muted-foreground sm:text-base">
                         <TextAnimate
                             as="p"
                             by="word"
                             type="fadeInUp"
                             text={intro}
-                            className=" leading-right font-bold md:text-md   text-muted-foreground"
+                            className=" leading-right font-base  lg:text-md text-sm  text-muted-foreground"
                             style={visible}
                         />
 
@@ -104,7 +104,7 @@ export default function Hero() {
                             by="word"
                             type="fadeInUp"
                             text={description}
-                            className="md:text-md font-bold leading-right"
+                            className="lg:text-md font-base  text-sm leading-right"
                             style={visible}
                         />
                     </div>

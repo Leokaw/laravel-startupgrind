@@ -1,5 +1,8 @@
+
 import BottomFeatures from './bottom-features';
+import FAQ from './faq';
 import Features from './features';
+import Footer from './footer';
 import Hero from './hero';
 import Partnership from './partnership';
 import SpeakersGrid from './speakers-grid';
@@ -16,6 +19,8 @@ export default function Home() {
             <BottomFeatures />
             <StoryAndCommunity />
             <SpeakersGrid />
+            <FAQ />
+            <Footer/>
         </div>
     );
 }
