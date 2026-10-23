@@ -101,7 +101,7 @@ export default function PublicHeader({ auth }: Props) {
     };
 
     return (
-        <header className="sticky force-light top-0 z-50 w-full">
+        <header className="sticky  top-0 z-50 w-full">
             {/* Top Red Banner */}
             <div className="bg-red-600 text-white">
                 <div className="flex min-h-12 flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 py-2 text-center text-sm">
@@ -115,7 +115,7 @@ export default function PublicHeader({ auth }: Props) {
             </div>
 
             {/* Main Navigation Bar */}
-            <div className="w-full border-b force-light border-border/40 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/40">
+            <div className="w-full border-b border-border/40 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/40">
                 <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                     
                     {/* Logo */}
